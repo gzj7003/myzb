@@ -9,14 +9,15 @@ jobs:
   run-script:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 关键权限配置
+      contents: write  # 必须要有写入权限
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v4  # 升级到v4版本
+      uses: actions/checkout@v4
       with:
-        persist-credentials: true  # 保持认证信息
-      
+        persist-credentials: true  # 关键配置！
+        fetch-depth: 0  # 获取完整历史记录
+
     - name: Install Dependencies
       run: |
         sudo apt-get update
@@ -28,9 +29,9 @@ jobs:
         bash ./zubo2.sh
 
     - name: Set up Python
-      uses: actions/setup-python@v4  # 升级到v4版本
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.10'  # 指定明确版本
+        python-version: '3.10'
 
     - name: run 去重py
       run: python ${{ github.workspace }}/去重.py
@@ -40,8 +41,10 @@ jobs:
         cd $GITHUB_WORKSPACE
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
         git add .
         git commit -m "自动更新组播源 [skip ci]"
+        git pull --rebase origin main  # 防止冲突
         git push origin HEAD:main
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 显式使用GITHUB_TOKEN
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 显式传递令牌
