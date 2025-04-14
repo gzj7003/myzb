@@ -2,16 +2,20 @@ name: zubo
 
 on:
   schedule:
-  - cron: '0 7,19 * * *'
+    - cron: '0 7,19 * * *'
   workflow_dispatch:
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 关键权限配置
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4  # 升级到v4版本
+      with:
+        persist-credentials: true  # 保持认证信息
       
     - name: Install Dependencies
       run: |
@@ -23,21 +27,10 @@ jobs:
         cd $GITHUB_WORKSPACE
         bash ./zubo2.sh
 
-#    - name: 测试组播地址
-#      run: |
-#        cd $GITHUB_WORKSPACE
-#        chmod +x speed.sh
-#        bash ./zubo.sh
-
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4  # 升级到v4版本
       with:
-          python-version: 3.x
-
-#    - name: Install dependencies
-#      run: |
-#         pip install selenium requests futures eventlet
-#         pip install selenium==4.19.0 requests==2.31.0 futures==3.0.5 eventlet==0.36.1
+        python-version: '3.10'  # 指定明确版本
 
     - name: run 去重py
       run: python ${{ github.workspace }}/去重.py
@@ -48,5 +41,7 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add .
-        git commit -m "更新组播源"
-        git push
+        git commit -m "自动更新组播源 [skip ci]"
+        git push origin HEAD:main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 显式使用GITHUB_TOKEN
