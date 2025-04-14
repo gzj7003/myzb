@@ -45,7 +45,8 @@ with open('zubo.txt', 'w', encoding="utf-8") as file:
 os.remove("zubo2.txt")
 
 # 在屏幕上显示更新时间（增强版输出）
-print("\n" + "="*50)
-print(f"✅ 文件已更新完成！")
-print(f"🕒 更新时间: {update_time}")
-print("="*50 + "\n")
+from rich.console import Console
+console = Console()
+console.rule("[bold green]✅ 文件已更新完成！", style="blue")
+console.print(f"🕒 更新时间: [bold yellow]{update_time}")
+console.rule(style="blue")
