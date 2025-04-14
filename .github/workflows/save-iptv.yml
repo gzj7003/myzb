@@ -1,0 +1,33 @@
+name: Save IPTV Changes
+on:
+  push:
+    branches: [ main ]  # 触发分支（例如 main/master）
+  
+jobs:
+  save-iptv:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整 Git 历史记录
+
+      - name: Get latest changed file
+        id: changed-file
+        run: |
+          # 获取最近更改的文件名
+          LATEST_FILE=$(git diff --name-only HEAD~1 HEAD)
+          echo "latest_file=$LATEST_FILE" >> $GITHUB_OUTPUT
+
+      - name: Save as iptv.txt
+        run: |
+          # 复制文件并重命名为 iptv.txt
+          cp "${{ steps.changed-file.outputs.latest_file }}" iptv.txt
+          echo "File saved as iptv.txt"
+
+      - name: Push to iptv branch
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: iptv
+          force: true  # 强制推送（可选）
