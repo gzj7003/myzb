@@ -90,7 +90,7 @@ def process_files():
                 seen_lines.add(source)
 
         # 在文件开头添加更新时间注释
-        unique_lines.insert(0, f" 文件最后更新时间: {update_time}\n")
+        unique_lines.insert(1, f"# 文件最后更新时间: {update_time}\n")
 
         # 将唯一的行写入新的文档 
         with open('zubo.txt', 'w', encoding="utf-8") as file:
