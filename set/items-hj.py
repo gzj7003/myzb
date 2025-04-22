@@ -48,7 +48,7 @@ def filter_live_sources():
     
     # 写入文件
     filtered_sources = list(dict.fromkeys(filtered_sources))  # 去重且保留顺序
-    output_path = output_dir / "Susaw-sa.txt"
+    output_path = output_dir / "zubo.txt"
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(filtered_sources))
     
