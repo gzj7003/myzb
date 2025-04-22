@@ -38,6 +38,13 @@ jobs:
       - name: Run iptv
         run: python ${{ github.workspace }}/set/items-hj.py
 
+      - name: Verify output  # 新增验证步骤
+        run: |
+          echo "生成内容预览："
+          head -n 5 set/zubo.txt
+          echo -e "\n频道名称验证："
+          grep "CCTV" set/zubo.txt | head -n 3        
+
       - name: Commit results
         run: |
           git config --local user.email "actions@github.com"
