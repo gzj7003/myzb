@@ -1,9 +1,13 @@
 import requests
-import os
 from pathlib import Path
+import urllib3
+from urllib3.exceptions import InsecureRequestWarning
+
+# 禁用SSL警告
+urllib3.disable_warnings(InsecureRequestWarning)
 
 def filter_live_sources():
-    # 模板文件中的央视和卫视频道
+    # 模板频道列表
     template_channels = [
         "CCTV1", "CCTV2", "CCTV3", "CCTV4", "CCTV5", "CCTV6", "CCTV7", "CCTV8",
         "CCTV9", "CCTV10", "CCTV11", "CCTV12", "CCTV13", "CCTV14", "CCTV15",
@@ -11,7 +15,7 @@ def filter_live_sources():
         "重庆卫视", "四川卫视", "天津卫视", "兵团卫视"
     ]
     
-    # 苏州地方台直播源
+    # 苏州地方台
     suzhou_sources = [
         "苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8$江苏苏州地方",
         "苏州社会经济,https://live-auth.51kandianshi.com/szgd/csztv2.m3u8$江苏苏州地方",
@@ -20,36 +24,37 @@ def filter_live_sources():
         "苏州4K,https://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8$江苏苏州地方"
     ]
     
-    # 获取直播源内容（跳过SSL验证）
-    url = "https://raw.githubusercontent.com/q1017673817/iptvz/refs/heads/main/zubo.txt"
+    # 获取直播源
+    url = "https://raw.githubusercontent.com/q1017673817/iptvz/main/zubo.txt"
     try:
-        response = requests.get(url, verify=False)
+        response = requests.get(url, verify=False, timeout=10)
         response.raise_for_status()
         live_sources = response.text.splitlines()
-    except Exception as e:
+    except requests.RequestException as e:
         print(f"获取直播源失败: {e}")
-        return
+        return None
     
-    # 筛选所有匹配的线路（不再用break中断）
+    # 筛选频道
     filtered_sources = []
     for channel in template_channels:
-        for line in live_sources:
-            if line.startswith(channel + ","):
-                filtered_sources.append(line)  # 保留所有匹配线路
+        matched = [line for line in live_sources if line.startswith(channel + ",")]
+        filtered_sources.extend(matched)
     
-    # 添加苏州地方台
+    # 添加苏州台并去重
     filtered_sources.extend(suzhou_sources)
+    unique_sources = list(dict.fromkeys(filtered_sources))
     
-    # 写入主目录下的 zubo.txt 文件
-    filtered_sources = list(dict.fromkeys(filtered_sources))  # 去重且保留顺序
-    output_path = Path(__file__).parent / "zubo.txt"  # 直接输出到主目录
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(filtered_sources))
-    
-    print(f"文件已保存到: {output_path}")
-    print(f"共找到 {len(filtered_sources)} 条线路（含 {len(suzhou_sources)} 条苏州台）")
+    # 写入文件
+    output_path = Path(__file__).parent / "zubo.txt"
+    try:
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(unique_sources))
+        print(f"成功保存到: {output_path}")
+        print(f"总频道数: {len(unique_sources)} (含 {len(suzhou_sources)} 个苏州台)")
+        return True
+    except IOError as e:
+        print(f"文件写入失败: {e}")
+        return False
 
 if __name__ == "__main__":
-    import urllib3
-    urllib3.disable_warnings()
     filter_live_sources()
