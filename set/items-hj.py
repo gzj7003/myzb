@@ -86,7 +86,19 @@ with open("set/zubo.txt", "w", encoding="utf-8") as f:
             f.write("\n".join(unique_sources))
         print(f"成功保存到: {output_path}")
         print(f"总频道数: {len(unique_sources)} (含 {len(suzhou_sources)} 个苏州台)")
-        return True
+
+def validate_source(url):
+    # ...你的验证逻辑...
+    if valid:
+        return True  # ✅ 正确的函数内返回
+    return False
+
+# --- 或者处理主逻辑时 ---
+def main():
+    # ...处理逻辑...
+    if need_early_exit:
+        return  # 在函数内返回
+        
     except IOError as e:
         print(f"文件写入失败: {e}")
         return False
