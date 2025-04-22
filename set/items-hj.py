@@ -43,6 +43,41 @@ def filter_live_sources():
     # 添加苏州台并去重
     filtered_sources.extend(suzhou_sources)
     unique_sources = list(dict.fromkeys(filtered_sources))
+
+import re
+
+def process_channel_name(name):
+    """处理CCTV频道名称标准化"""
+    # 匹配所有CCTV相关频道（包括数字和特殊频道）
+    pattern = r"CCTV[\-\s]?(\d+)[^\d]*"
+    
+    # 先尝试提取数字编号
+    match = re.search(pattern, name)
+    if match:
+        return f"CCTV{match.group(1)}"
+    
+    # 保留非CCTV频道的原始名称（如地方台）
+    return name
+
+# 假设原始数据存储格式（根据你的实际数据源调整）
+original_sources = [
+    "CCTV-1综合,http://113.104.186.81:7088/udp/239.77.1.144:5146",
+    "CCTV-2财经,http://27.46.65.9:17088/udp/239.0.1.4:8084",
+    "湖南卫视,http://example.com/stream"
+]
+
+processed_sources = []
+for source in original_sources:
+    try:
+        name, url = source.split(",", 1)
+        clean_name = process_channel_name(name)
+        processed_sources.append(f"{clean_name},{url}")
+    except ValueError:
+        continue
+
+# 写入处理后的文件（根据你的实际文件路径调整）
+with open("set/zubo.txt", "w", encoding="utf-8") as f:
+    f.write("\n".join(processed_sources))
     
     # 写入文件
     output_path = Path(__file__).parent / "zubo.txt"
