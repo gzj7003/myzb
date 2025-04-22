@@ -1,10 +1,17 @@
 import requests
 from pathlib import Path
 import urllib3
+import re
 from urllib3.exceptions import InsecureRequestWarning
 
 # 禁用SSL警告
 urllib3.disable_warnings(InsecureRequestWarning)
+
+def process_channel_name(name):
+    """处理CCTV频道名称标准化"""
+    pattern = r"CCTV[\-\s]?(\d+)[^\d]*"
+    match = re.search(pattern, name)
+    return f"CCTV{match.group(1)}" if match else name
 
 def filter_live_sources():
     # 模板频道列表
@@ -32,76 +39,41 @@ def filter_live_sources():
         live_sources = response.text.splitlines()
     except requests.RequestException as e:
         print(f"获取直播源失败: {e}")
-        return None
-    
-    # 筛选频道
-    filtered_sources = []
-    for channel in template_channels:
-        matched = [line for line in live_sources if line.startswith(channel + ",")]
-        filtered_sources.extend(matched)
+        return []
+
+    # 处理频道名称并筛选
+    processed_sources = []
+    for line in live_sources:
+        try:
+            name, url = line.split(",", 1)
+            clean_name = process_channel_name(name)
+            if any(clean_name.startswith(ch) for ch in template_channels):
+                processed_sources.append(f"{clean_name},{url}")
+        except ValueError:
+            continue
     
     # 添加苏州台并去重
-    filtered_sources.extend(suzhou_sources)
-    unique_sources = list(dict.fromkeys(filtered_sources))
+    processed_sources.extend(suzhou_sources)
+    return list(dict.fromkeys(processed_sources))
 
-import re
-
-def process_channel_name(name):
-    """处理CCTV频道名称标准化"""
-    # 匹配所有CCTV相关频道（包括数字和特殊频道）
-    pattern = r"CCTV[\-\s]?(\d+)[^\d]*"
-    
-    # 先尝试提取数字编号
-    match = re.search(pattern, name)
-    if match:
-        return f"CCTV{match.group(1)}"
-    
-    # 保留非CCTV频道的原始名称（如地方台）
-    return name
-
-# 假设原始数据存储格式（根据你的实际数据源调整）
-original_sources = [
-    "CCTV-1综合,http://113.104.186.81:7088/udp/239.77.1.144:5146",
-    "CCTV-2财经,http://27.46.65.9:17088/udp/239.0.1.4:8084",
-    "湖南卫视,http://example.com/stream"
-]
-
-processed_sources = []
-for source in original_sources:
-    try:
-        name, url = source.split(",", 1)
-        clean_name = process_channel_name(name)
-        processed_sources.append(f"{clean_name},{url}")
-    except ValueError:
-        continue
-
-# 写入处理后的文件（根据你的实际文件路径调整）
-with open("set/zubo.txt", "w", encoding="utf-8") as f:
-    f.write("\n".join(processed_sources))
+def main():
+    # 获取并处理直播源
+    filtered_sources = filter_live_sources()
     
     # 写入文件
-    output_path = Path(__file__).parent / "zubo.txt"
+    output_path = Path(__file__).parent / "set/zubo.txt"
     try:
         with open(output_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(unique_sources))
+            f.write("\n".join(filtered_sources))
         print(f"成功保存到: {output_path}")
-        print(f"总频道数: {len(unique_sources)} (含 {len(suzhou_sources)} 个苏州台)")
-
-def validate_source(url):
-    # ...你的验证逻辑...
-    if valid:
-        return True  # ✅ 正确的函数内返回
-    return False
-
-# --- 或者处理主逻辑时 ---
-def main():
-    # ...处理逻辑...
-    if need_early_exit:
-        return  # 在函数内返回
-        
+        print(f"总频道数: {len(filtered_sources)}")
+        return True
     except IOError as e:
         print(f"文件写入失败: {e}")
         return False
 
 if __name__ == "__main__":
-    filter_live_sources()
+    if main():
+        print("执行成功")
+    else:
+        print("执行过程中遇到错误")
