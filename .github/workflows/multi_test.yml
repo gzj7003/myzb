@@ -1,4 +1,4 @@
-name: test_zubo
+name:  multi_test
 
 on:
   schedule:
