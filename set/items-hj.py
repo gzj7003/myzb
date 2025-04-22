@@ -40,15 +40,9 @@ def filter_live_sources():
     # 添加苏州地方台
     filtered_sources.extend(suzhou_sources)
     
-    # 获取项目主目录路径
-    script_dir = Path(__file__).parent
-    project_root = script_dir.parent
-    output_dir = project_root / "txt_files"
-    output_dir.mkdir(exist_ok=True)
-    
-    # 写入文件
+    # 写入主目录下的 zubo.txt 文件
     filtered_sources = list(dict.fromkeys(filtered_sources))  # 去重且保留顺序
-    output_path = output_dir / "zubo.txt"
+    output_path = Path(__file__).parent / "zubo.txt"  # 直接输出到主目录
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(filtered_sources))
     
