@@ -2,45 +2,54 @@ name: items-hj
 
 on:
   schedule:
-  - cron: '03 22,9 * * *'  
+    - cron: '03 22,9 * * *'
   workflow_dispatch:
-    分支:
+    inputs: {}
+    branches:  # 修正语法错误
       - main
-permissions: write-all  
+
+permissions:
+  contents: write  # 更安全的权限设置
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4  # 升级到最新版本
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.x
-      - name: Install numpy          
-        run: pip install 'numpy==1.26.4'
-      - name: Install dependencies
-        run: pip install selenium requests futures eventlet
-      - name: Install dependencies
-        run: pip install opencv-python requests 
-      - name: Install dependencies
-        run: pip install Beautifulsoup4 requests 
-      - name: Install dependencies
-        run: pip install translate requests 
-        
+          python-version: '3.x'
+
+      - name: Install dependencies  # 合并所有依赖安装
+        run: |
+          pip install numpy==1.26.4 \
+              selenium \
+              requests \
+              futures \
+              eventlet \
+              opencv-python \
+              beautifulsoup4 \
+              translate
+
       - name: Run iptv
         run: python ${{ github.workspace }}/set/items-hj.py
-         
+
       - name: Commit results
         run: |
-             git config --local user.email "actions@github.com"
-             git config --local user.name "GitHub Action"
-             git add zubo.txt  # 明确添加生成的文件
-             if [ -n "$(git status --porcelain)" ]; then
-               git commit -m "Automatic update"
-               git push
-             else
-               echo "No changes detected, skipping commit."
-             fi
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          
+          # 修正文件路径（添加set/前缀）
+          git add set/zubo.txt
+          
+          # 更严谨的状态检查
+          if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+            git commit -m "Automatic update: $(date +'%Y-%m-%d %H:%M')"
+            git push
+          else
+            echo "No changes detected in tracked files"
+          fi
