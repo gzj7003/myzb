@@ -44,7 +44,7 @@ jobs:
           git config --local user.name "GitHub Actions"
           
           # 修正文件路径（添加set/前缀）
-          git add set/zubo.txt
+          git add zubo.txt
           
           # 更严谨的状态检查
           if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
