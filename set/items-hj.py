@@ -61,7 +61,7 @@ def main():
     filtered_sources = filter_live_sources()
     
     # 写入文件
-    output_path = Path(__file__).parent / "zubo.txt"
+    output_path = Path(__file__).parent / "set/zubo.txt"
     try:
         with open(output_path, "w", encoding="utf-8") as f:
             f.write("\n".join(filtered_sources))
