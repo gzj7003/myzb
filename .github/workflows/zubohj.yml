@@ -44,12 +44,12 @@ jobs:
           git config --local user.name "GitHub Actions"
           
           # 修正文件路径（添加set/前缀）
-          git add zubo.txt
+          git add set/zubo.txt
           
           # 更严谨的状态检查
           if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-            git commit -m "Automatic update: $(date +'%Y-%m-%d %H:%M')"
-            git push
+              git commit -m "Automatic update: $(date +'%Y-%m-%d %H:%M')"
+              git push
           else
-            echo "No changes detected in tracked files"
+              echo "No changes detected in tracked files"
           fi
