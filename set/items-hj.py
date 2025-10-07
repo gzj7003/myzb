@@ -2,6 +2,8 @@ import requests
 from pathlib import Path
 import urllib3
 import re
+import time
+import concurrent.futures
 from urllib3.exceptions import InsecureRequestWarning
 
 # 禁用SSL警告
@@ -12,6 +14,19 @@ def process_channel_name(name):
     pattern = r"CCTV[\-\s]?(\d+)[^\d]*"
     match = re.search(pattern, name)
     return f"CCTV{match.group(1)}" if match else name
+
+def test_url_speed(url):
+    """测试URL的响应速度"""
+    try:
+        start_time = time.time()
+        response = requests.head(url, timeout=5, verify=False)
+        end_time = time.time()
+        if response.status_code == 200:
+            return end_time - start_time
+        else:
+            return float('inf')  # 返回无穷大表示不可用
+    except:
+        return float('inf')  # 返回无穷大表示不可用
 
 def filter_live_sources():
     # 模板频道列表
@@ -41,27 +56,61 @@ def filter_live_sources():
         print(f"获取直播源失败: {e}")
         return []
 
-    # 处理频道名称并筛选
-    processed_sources = []
+    # 按频道分组直播源
+    channel_sources = {}
     for line in live_sources:
         try:
             name, url = line.split(",", 1)
             clean_name = process_channel_name(name)
             if any(clean_name.startswith(ch) for ch in template_channels):
-                processed_sources.append(f"{clean_name},{url}")
+                if clean_name not in channel_sources:
+                    channel_sources[clean_name] = []
+                channel_sources[clean_name].append(url)
         except ValueError:
             continue
     
-    # 添加苏州台并去重
-    processed_sources.extend(suzhou_sources)
-    return list(dict.fromkeys(processed_sources))
+    # 为每个频道测试并选择最快的10个源
+    filtered_sources = []
+    
+    # 使用线程池并行测试速度
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        for channel, urls in channel_sources.items():
+            print(f"测试频道 {channel} 的 {len(urls)} 个源...")
+            
+            # 测试所有URL的速度
+            future_to_url = {executor.submit(test_url_speed, url): url for url in urls}
+            speed_results = []
+            
+            for future in concurrent.futures.as_completed(future_to_url):
+                url = future_to_url[future]
+                try:
+                    speed = future.result()
+                    speed_results.append((url, speed))
+                except Exception as e:
+                    print(f"测试URL {url} 时出错: {e}")
+                    speed_results.append((url, float('inf')))
+            
+            # 按速度排序并选择最快的10个
+            speed_results.sort(key=lambda x: x[1])
+            fastest_urls = speed_results[:10]
+            
+            # 添加到结果列表
+            for url, speed in fastest_urls:
+                if speed < float('inf'):
+                    filtered_sources.append(f"{channel},{url}")
+                    print(f"  保留: {url} (响应时间: {speed:.2f}s)")
+    
+    # 添加苏州台
+    filtered_sources.extend(suzhou_sources)
+    
+    return filtered_sources
 
 def main():
     # 获取并处理直播源
     filtered_sources = filter_live_sources()
     
     # 写入文件
-    output_path = Path(__file__).parent / "zubo.txt"  # 删除多余的set/前缀
+    output_path = Path(__file__).parent / "zubo.txt"
     try:
         with open(output_path, "w", encoding="utf-8") as f:
             f.write("\n".join(filtered_sources))
