@@ -2,26 +2,10 @@ import requests
 from pathlib import Path
 import urllib3
 import re
-import time
-import concurrent.futures
 from urllib3.exceptions import InsecureRequestWarning
 
 # 禁用SSL警告
 urllib3.disable_warnings(InsecureRequestWarning)
-
-def test_source_speed(url, timeout=5):
-    """测试直播源的速度，返回响应时间(秒)"""
-    try:
-        start_time = time.time()
-        response = requests.get(url, timeout=timeout, verify=False, stream=True)
-        # 只读取一小部分数据来测试连接速度
-        for _ in response.iter_content(1024):  # 读取1KB数据
-            break
-        response.close()
-        end_time = time.time()
-        return end_time - start_time
-    except:
-        return float('inf')  # 如果失败返回无穷大
 
 def process_channel_name(name):
     """处理CCTV频道名称标准化"""
@@ -61,69 +45,27 @@ def filter_live_sources():
     processed_sources = []
     for line in live_sources:
         try:
-            name, source_url = line.split(",", 1)
+            name, url = line.split(",", 1)
             clean_name = process_channel_name(name)
             if any(clean_name.startswith(ch) for ch in template_channels):
-                processed_sources.append((clean_name, source_url))
+                processed_sources.append(f"{clean_name},{url}")
         except ValueError:
             continue
     
-    # 添加苏州台
-    for suzhou_source in suzhou_sources:
-        name, source_url = suzhou_source.split(",", 1)
-        processed_sources.append((name, source_url))
-    
-    # 去重
-    unique_sources = list(dict.fromkeys([f"{name},{url}" for name, url in processed_sources]))
-    
-    # 测试所有源的速度
-    print("开始测试直播源速度...")
-    sources_with_speed = []
-    
-    # 使用线程池并发测试速度
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        # 准备测试任务
-        future_to_source = {}
-        for source in unique_sources:
-            name, source_url = source.split(",", 1)
-            # 提取真实的m3u8 URL（去掉可能的分组信息）
-            m3u8_url = source_url.split('$')[0] if '$' in source_url else source_url
-            future = executor.submit(test_source_speed, m3u8_url)
-            future_to_source[future] = (name, source_url)
-        
-        # 收集结果
-        completed = 0
-        total = len(future_to_source)
-        for future in concurrent.futures.as_completed(future_to_source):
-            name, source_url = future_to_source[future]
-            speed = future.result()
-            completed += 1
-            print(f"进度: {completed}/{total} - {name}: {speed:.2f}s" if speed != float('inf') else f"进度: {completed}/{total} - {name}: 超时")
-            
-            if speed != float('inf'):  # 只保留有效的源
-                sources_with_speed.append((name, source_url, speed))
-    
-    # 按速度排序并保留前10个最快的
-    sources_with_speed.sort(key=lambda x: x[2])  # 按速度升序排序
-    fastest_sources = [f"{name},{url}" for name, url, speed in sources_with_speed[:10]]
-    
-    print(f"\n速度测试完成，共找到 {len(fastest_sources)} 个有效直播源")
-    print("最快的10个源：")
-    for i, (name, url, speed) in enumerate(sources_with_speed[:10], 1):
-        print(f"{i}. {name}: {speed:.2f}秒")
-    
-    return fastest_sources
+    # 添加苏州台并去重
+    processed_sources.extend(suzhou_sources)
+    return list(dict.fromkeys(processed_sources))
 
 def main():
     # 获取并处理直播源
     filtered_sources = filter_live_sources()
     
     # 写入文件
-    output_path = Path(__file__).parent / "zubo.txt"
+    output_path = Path(__file__).parent / "zubo.txt"  # 删除多余的set/前缀
     try:
         with open(output_path, "w", encoding="utf-8") as f:
             f.write("\n".join(filtered_sources))
-        print(f"\n成功保存到: {output_path}")
+        print(f"成功保存到: {output_path}")
         print(f"总频道数: {len(filtered_sources)}")
         return True
     except IOError as e:
