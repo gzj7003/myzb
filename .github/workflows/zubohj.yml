@@ -2,7 +2,7 @@ name: items-hj
 
 on:
   schedule:
-    - cron: '03 22,9 * * *'
+    - cron: '03 22,5,15 * * *'
   workflow_dispatch:
     inputs: {}
     branches:  # 修正语法错误
