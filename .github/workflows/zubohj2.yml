@@ -1,0 +1,55 @@
+name: items-hj2
+
+on:
+  schedule:
+    - cron: '03 23,6,16 * * *'
+  workflow_dispatch:
+    inputs: {}
+    branches:  # 修正语法错误
+      - main
+
+permissions:
+  contents: write  # 更安全的权限设置
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4  # 升级到最新版本
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies  # 合并所有依赖安装
+        run: |
+          pip install numpy==1.26.4 \
+              selenium \
+              requests \
+              futures \
+              eventlet \
+              opencv-python \
+              beautifulsoup4 \
+              translate
+
+      - name: Run iptv
+        run: python ${{ github.workspace }}/set/items-hj2.py
+
+      - name: Commit results
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          
+          # 修正文件路径（添加set/前缀）
+          git add set/zb.txt
+          
+          # 更严谨的状态检查
+          if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+              git commit -m "Automatic update: $(date +'%Y-%m-%d %H:%M')"
+              git push
+          else
+              echo "No changes detected in tracked files"
+          fi
