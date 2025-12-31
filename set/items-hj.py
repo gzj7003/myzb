@@ -39,7 +39,7 @@ def filter_live_sources():
     
     # 苏州地方台
     suzhou_sources = [
-        "兵团卫视https://liveout.btzx.com.cn/62ds9e/yil08g.m3u8?timestamp=20251231140000&encrypt=320a47228cc3c9c6d1cc6e50cb452e36"
+        "兵团卫视,https://liveout.btzx.com.cn/62ds9e/yil08g.m3u8?timestamp=20251231140000&encrypt=320a47228cc3c9c6d1cc6e50cb452e36",
         "苏州新闻综合,http://live-auth.51kandianshi.com/szgd/csztv1.m3u8$江苏苏州地方",
         "苏州社会经济,http://live-auth.51kandianshi.com/szgd/csztv2.m3u8$江苏苏州地方",
         "苏州文化生活,http://live-auth.51kandianshi.com/szgd/csztv3.m3u8$江苏苏州地方",
