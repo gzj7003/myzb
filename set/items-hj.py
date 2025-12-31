@@ -39,15 +39,17 @@ def filter_live_sources():
     
     # 苏州地方台
     suzhou_sources = [
-        "苏州新闻综合,https://live-auth.51kandianshi.com/szgd/csztv1.m3u8$江苏苏州地方",
-        "苏州社会经济,https://live-auth.51kandianshi.com/szgd/csztv2.m3u8$江苏苏州地方",
-        "苏州文化生活,https://live-auth.51kandianshi.com/szgd/csztv3.m3u8$江苏苏州地方",
-        "苏州生活资讯,https://live-auth.51kandianshi.com/szgd/csztv5.m3u8$江苏苏州地方",
-        "苏州4K,https://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8$江苏苏州地方"
+        "苏州新闻综合,http://live-auth.51kandianshi.com/szgd/csztv1.m3u8$江苏苏州地方",
+        "苏州社会经济,http://live-auth.51kandianshi.com/szgd/csztv2.m3u8$江苏苏州地方",
+        "苏州文化生活,http://live-auth.51kandianshi.com/szgd/csztv3.m3u8$江苏苏州地方",
+        "苏州生活资讯,http://live-auth.51kandianshi.com/szgd/csztv5.m3u8$江苏苏州地方",
+        "苏州4K,http://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8$江苏苏州地方"
     ]
     
     # 获取直播源
     url = "https://raw.githubusercontent.com/q1017673817/iptvz/main/zubo.txt"
+    url = "https://raw.githubusercontent.com/q1017673817/iptvz/refs/heads/main/txt/%E6%B1%9F%E8%8B%8F%E7%94%B5%E4%BF%A1.txt"
+    url = "https://raw.githubusercontent.com/q1017673817/iptvz/refs/heads/main/txt/%E5%AE%89%E5%BE%BD%E7%94%B5%E4%BF%A1.txt"
     try:
         response = requests.get(url, verify=False, timeout=10)
         response.raise_for_status()
