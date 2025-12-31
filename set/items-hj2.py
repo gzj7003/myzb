@@ -47,11 +47,7 @@ def filter_live_sources():
     ]
     
     # 直播源地址列表 - 新增了两个源
-    source_urls = [
-        "https://raw.githubusercontent.com/q1017673817/iptvz/main/zubo.txt",
-        "https://github.com/q1017673817/iptvz/raw/refs/heads/main/txt/%E5%AE%89%E5%BE%BD%E7%94%B5%E4%BF%A1.txt",
-        "https://github.com/q1017673817/iptvz/raw/refs/heads/main/txt/%E5%8C%97%E4%BA%AC%E7%94%B5%E4%BF%A1.txt"
-    ]
+    urls = "https://raw.githubusercontent.com/gzj7003/iptvz/refs/heads/main/zubo_all.txt"
     
     # 从多个源获取直播源
     all_live_sources = []
