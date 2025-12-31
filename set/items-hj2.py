@@ -47,30 +47,19 @@ def filter_live_sources():
         "苏州4K,http://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8$江苏苏州地方"
     ]
     
-    # 直播源地址列表 - 新增了两个源
-    urls = "https://raw.githubusercontent.com/gzj7003/iptvz/refs/heads/main/zubo_all.txt"
-    
-    # 从多个源获取直播源
-    all_live_sources = []
-    
-    for url in source_urls:
-        try:
-            print(f"正在获取直播源: {url}")
-            response = requests.get(url, verify=False, timeout=10)
-            response.raise_for_status()
-            live_sources = response.text.splitlines()
-            all_live_sources.extend(live_sources)
-            print(f"  从 {url} 获取到 {len(live_sources)} 行")
-        except requests.RequestException as e:
-            print(f"获取直播源失败 ({url}): {e}")
-    
-    if not all_live_sources:
-        print("未能从任何源获取到直播源")
+    # 获取直播源
+    url = "https://raw.githubusercontent.com/gzj7003/iptvz/refs/heads/main/zubo_all.txt"
+    try:
+        response = requests.get(url, verify=False, timeout=10)
+        response.raise_for_status()
+        live_sources = response.text.splitlines()
+    except requests.RequestException as e:
+        print(f"获取直播源失败: {e}")
         return []
-    
+
     # 按频道分组直播源
     channel_sources = {}
-    for line in all_live_sources:
+    for line in live_sources:
         try:
             name, url = line.split(",", 1)
             clean_name = process_channel_name(name)
@@ -121,7 +110,7 @@ def main():
     # 获取并处理直播源
     filtered_sources = filter_live_sources()
     
-    # 写入文件 - 修改为zb.txt
+    # 写入文件
     output_path = Path(__file__).parent / "zb.txt"
     try:
         with open(output_path, "w", encoding="utf-8") as f:
