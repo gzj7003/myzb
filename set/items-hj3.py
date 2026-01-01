@@ -124,8 +124,12 @@ def main():
     # 获取并处理直播源
     filtered_sources = filter_live_sources()
     
-    # 写入文件 - 修改为zb3.txt
-    output_path = Path(__file__).parent / "zb3.txt"
+    # 写入文件 - 确保输出为 zb3.txt
+    output_path = Path(__file__).parent / "zb3.txt"  # 注意：这是相对路径
+    
+    # 或者使用绝对路径到根目录
+    # output_path = Path(__file__).parent.parent / "zb3.txt"
+    
     try:
         with open(output_path, "w", encoding="utf-8") as f:
             f.write("\n".join(filtered_sources))
@@ -135,9 +139,3 @@ def main():
     except IOError as e:
         print(f"文件写入失败: {e}")
         return False
-
-if __name__ == "__main__":
-    if main():
-        print("执行成功")
-    else:
-        print("执行过程中遇到错误")
