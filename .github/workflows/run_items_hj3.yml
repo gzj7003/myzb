@@ -34,8 +34,7 @@ jobs:
         pip install requests
         
     - name: 运行 items-hj3.py 脚本
-      run: |
-        python items-hj3.py
+      run: python ${{ github.workspace }}/set/items-hj3.py
         # 检查是否生成了zb3.txt文件
         if [ -f "zb3.txt" ]; then
           echo "文件生成成功"
