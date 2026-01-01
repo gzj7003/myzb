@@ -1,0 +1,65 @@
+name: 自动运行 items-hj3.py 脚本
+
+on:
+  # 定时触发：每天UTC时间22:00和07:00（对应北京时间06:00和15:00）
+  schedule:
+    - cron: '0 22 * * *'  # 每天22:00 UTC（北京时间次日06:00）
+    - cron: '0 7 * * *'   # 每天07:00 UTC（北京时间15:00）
+  
+  # 允许手动触发
+  workflow_dispatch:
+  
+  # 当代码推送时也运行（可选）
+  push:
+    branches: [ main, master ]
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v3
+      with:
+        # 获取完整历史记录，以便能够推送回仓库
+        fetch-depth: 0
+    
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: 安装依赖
+      run: |
+        pip install requests
+        
+    - name: 运行 items-hj3.py 脚本
+      run: |
+        python items-hj3.py
+        # 检查是否生成了zb3.txt文件
+        if [ -f "zb3.txt" ]; then
+          echo "文件生成成功"
+          ls -la zb3.txt
+          echo "文件前10行内容:"
+          head -10 zb3.txt
+        else
+          echo "警告: zb3.txt 文件未生成"
+          exit 1
+        fi
+    
+    - name: 配置Git
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+    
+    - name: 提交生成的文件
+      run: |
+        # 检查文件是否有变化
+        if git diff --quiet zb3.txt; then
+          echo "文件没有变化，无需提交"
+        else
+          echo "检测到文件变化，准备提交"
+          git add zb3.txt
+          git commit -m "自动更新: items-hj3.py 生成的zb3.txt文件 [$(date +'%Y-%m-%d %H:%M:%S')]"
+          git push origin HEAD
+        fi
