@@ -174,8 +174,8 @@ def main():
             safe_print("错误: 没有获取到任何直播源")
             return False
             
-        # 写入文件 - 确保输出为 zb3.txt，保存在脚本同一目录下
-        output_path = current_dir / "zb3.txt"
+        # 写入文件 - 确保输出为 zby.txt，保存在脚本同一目录下
+        output_path = current_dir / "zby.txt"
         safe_print(f"输出文件路径: {output_path}")
         
         try:
