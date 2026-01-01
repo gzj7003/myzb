@@ -7,6 +7,7 @@ import concurrent.futures
 from urllib3.exceptions import InsecureRequestWarning
 import socket
 import threading
+import os
 
 # 禁用SSL警告
 urllib3.disable_warnings(InsecureRequestWarning)
@@ -92,8 +93,17 @@ def filter_live_sources():
     channel_sources = {}
     processed_count = 0
     for line in all_live_sources:
+        # 跳过空行
+        if not line.strip():
+            continue
+            
         try:
-            name, url = line.split(",", 1)
+            # 分割频道名和URL
+            parts = line.split(",", 1)
+            if len(parts) < 2:
+                continue
+                
+            name, url = parts
             clean_name = process_channel_name(name)
             if any(clean_name.startswith(ch) for ch in template_channels):
                 if clean_name not in channel_sources:
@@ -114,6 +124,9 @@ def filter_live_sources():
     # 使用线程池并行测试速度
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         for channel, urls in channel_sources.items():
+            if not urls:
+                continue
+                
             safe_print(f"测试频道 {channel} 的 {len(urls)} 个源...")
             
             # 测试所有URL的速度
@@ -133,7 +146,9 @@ def filter_live_sources():
             speed_results.sort(key=lambda x: x[1])
             # 只选择速度不是无穷大的源
             valid_sources = [item for item in speed_results if item[1] < float('inf')]
-            fastest_urls = valid_sources[:10]  # 最多取10个最快的
+            
+            # 如果有效源少于10个，则全部使用
+            fastest_urls = valid_sources[:10] if len(valid_sources) > 10 else valid_sources
             
             # 添加到结果列表
             for url, speed in fastest_urls:
@@ -148,22 +163,20 @@ def filter_live_sources():
 
 def main():
     try:
+        # 获取当前脚本所在目录
+        current_dir = Path(__file__).parent.absolute()
+        safe_print(f"当前脚本目录: {current_dir}")
+        
         # 获取并处理直播源
         filtered_sources = filter_live_sources()
         
-        # 写入文件 - 确保输出为 zb3.txt
-        # 使用绝对路径到仓库根目录
-        script_dir = Path(__file__).parent
-        root_dir = script_dir.parent
-        output_path = root_dir / "zb3.txt"
-        
-        # 如果脚本就在根目录，使用当前目录
-        if script_dir == root_dir:
-            output_path = script_dir / "zb3.txt"
-        
-        safe_print(f"脚本目录: {script_dir}")
-        safe_print(f"根目录: {root_dir}")
-        safe_print(f"输出路径: {output_path}")
+        if not filtered_sources:
+            safe_print("错误: 没有获取到任何直播源")
+            return False
+            
+        # 写入文件 - 确保输出为 zb3.txt，保存在脚本同一目录下
+        output_path = current_dir / "zb3.txt"
+        safe_print(f"输出文件路径: {output_path}")
         
         try:
             with open(output_path, "w", encoding="utf-8") as f:
@@ -171,29 +184,45 @@ def main():
             safe_print(f"成功保存到: {output_path}")
             safe_print(f"总频道数: {len(filtered_sources)}")
             
-            # 显示文件前几行内容
-            try:
-                with open(output_path, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                    if lines:
-                        safe_print("文件前5行内容:")
-                        for i in range(min(5, len(lines))):
-                            safe_print(f"  {lines[i].strip()}")
-                    else:
-                        safe_print("文件为空!")
-            except:
-                pass
+            # 验证文件是否已创建
+            if os.path.exists(output_path):
+                file_size = os.path.getsize(output_path)
+                safe_print(f"文件大小: {file_size} 字节")
+                
+                # 显示文件前几行内容
+                try:
+                    with open(output_path, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                        if lines:
+                            safe_print("文件前5行内容:")
+                            for i in range(min(5, len(lines))):
+                                safe_print(f"  {lines[i].strip()}")
+                        else:
+                            safe_print("警告: 文件为空!")
+                            return False
+                except Exception as e:
+                    safe_print(f"读取文件内容出错: {e}")
+                    return False
+            else:
+                safe_print("错误: 文件未创建成功")
+                return False
                 
             return True
         except IOError as e:
             safe_print(f"文件写入失败: {e}")
+            # 尝试检查目录权限
+            safe_print(f"当前目录权限: {os.access(current_dir, os.W_OK)}")
             return False
     except Exception as e:
         safe_print(f"程序执行出错: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 if __name__ == "__main__":
     if main():
         safe_print("执行成功")
+        exit(0)
     else:
         safe_print("执行过程中遇到错误")
+        exit(1)
