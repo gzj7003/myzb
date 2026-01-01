@@ -124,7 +124,7 @@ def main():
     # 获取并处理直播源
     filtered_sources = filter_live_sources()
     
-    # 写入文件 - 修改为zb.txt
+    # 写入文件 - 修改为zb3.txt
     output_path = Path(__file__).parent / "zb3.txt"
     try:
         with open(output_path, "w", encoding="utf-8") as f:
