@@ -48,7 +48,7 @@ def filter_live_sources():
     ]
     
     # 获取直播源
-    url = "https://raw.githubusercontent.com/gzj7003/iptvz/refs/heads/main/txt/%E5%AE%89%E5%BE%BD%E7%94%B5%E4%BF%A1.txt"
+    url = "https://gh-proxy.org/https://raw.githubusercontent.com/gzj7003/iptvz/refs/heads/main/txt/%E5%AE%89%E5%BE%BD%E7%94%B5%E4%BF%A1.txt"
     try:
         response = requests.get(url, verify=False, timeout=10)
         response.raise_for_status()
