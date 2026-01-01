@@ -48,7 +48,7 @@ def filter_live_sources():
     ]
     
     # 获取直播源
-    url = "view-source:https://pl10000.infinityfreeapp.com/vtv.php?subscribe=1&tpl=%E5%8C%97%E4%BA%AC%E8%81%94%E9%80%9A"
+    url = "https://pl10000.infinityfreeapp.com/vtv.php?subscribe=1&tpl=%E5%8C%97%E4%BA%AC%E8%81%94%E9%80%9A"
     try:
         response = requests.get(url, verify=False, timeout=10)
         response.raise_for_status()
