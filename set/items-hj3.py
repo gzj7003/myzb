@@ -28,21 +28,34 @@ def process_channel_name(name):
     return f"CCTV{match.group(1)}" if match else name
 
 def test_url_speed(url):
-    """测试URL的响应速度"""
+    """测试URL的响应速度 - 优化版本"""
     try:
         start_time = time.time()
-        # 使用GET而不是HEAD，因为有些服务器不支持HEAD方法
-        response = requests.get(url, timeout=5, verify=False, stream=True)
+        # 只发送HEAD请求，节省带宽
+        response = requests.head(url, timeout=3, verify=False, allow_redirects=True)
         end_time = time.time()
-        if response.status_code in [200, 206]:  # 206表示部分内容
-            # 立即关闭连接，避免占用资源
-            response.close()
+        
+        if response.status_code in [200, 206, 301, 302, 307, 308]:
             return end_time - start_time
         else:
-            return float('inf')  # 返回无穷大表示不可用
+            return float('inf')
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+        return float('inf')
     except Exception as e:
-        # safe_print(f"测试URL {url} 失败: {e}")
-        return float('inf')  # 返回无穷大表示不可用
+        # 对于其他异常，可以尝试GET请求（但限制大小）
+        try:
+            start_time = time.time()
+            response = requests.get(url, timeout=2, verify=False, stream=True)
+            # 只读取前1024字节
+            response.iter_content(chunk_size=1024, decode_unicode=True)
+            end_time = time.time()
+            if response.status_code == 200:
+                response.close()
+                return end_time - start_time
+            else:
+                return float('inf')
+        except:
+            return float('inf')
 
 def filter_live_sources():
     # 模板频道列表
@@ -62,7 +75,7 @@ def filter_live_sources():
         "苏州4K,http://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8$江苏苏州地方"
     ]
     
-    # 修正的直播源地址列表
+    # 直播源地址列表
     source_urls = [
         "https://raw.githubusercontent.com/q1017673817/iptvz/main/zubo.txt",
         "https://raw.githubusercontent.com/q1017673817/iptvz/main/txt/安徽电信.txt",
@@ -75,24 +88,38 @@ def filter_live_sources():
     for url in source_urls:
         try:
             safe_print(f"正在获取直播源: {url}")
-            response = requests.get(url, verify=False, timeout=15)
-            response.raise_for_status()
-            live_sources = response.text.splitlines()
-            all_live_sources.extend(live_sources)
-            safe_print(f"  从 {url} 获取到 {len(live_sources)} 行")
+            # 增加重试机制
+            for attempt in range(3):
+                try:
+                    response = requests.get(url, verify=False, timeout=10)
+                    response.raise_for_status()
+                    live_sources = response.text.strip().splitlines()
+                    # 过滤掉注释行和空行
+                    live_sources = [line for line in live_sources if line.strip() and not line.startswith('#')]
+                    all_live_sources.extend(live_sources)
+                    safe_print(f"  从 {url} 获取到 {len(live_sources)} 行")
+                    break
+                except requests.exceptions.Timeout:
+                    if attempt < 2:
+                        safe_print(f"  第{attempt+1}次尝试超时，重试...")
+                        time.sleep(1)
+                    else:
+                        safe_print(f"  获取 {url} 超时")
         except requests.RequestException as e:
             safe_print(f"获取直播源失败 ({url}): {e}")
     
     if not all_live_sources:
         safe_print("未能从任何源获取到直播源")
-        return []
+        return suzhou_sources  # 至少返回苏州台
     
-    safe_print(f"总共获取到 {len(all_live_sources)} 行直播源数据")
+    # 去重
+    unique_sources = list(dict.fromkeys(all_live_sources))
+    safe_print(f"总共获取到 {len(all_live_sources)} 行直播源数据，去重后 {len(unique_sources)} 行")
     
     # 按频道分组直播源
     channel_sources = {}
     processed_count = 0
-    for line in all_live_sources:
+    for line in unique_sources:
         # 跳过空行
         if not line.strip():
             continue
@@ -108,18 +135,25 @@ def filter_live_sources():
             if any(clean_name.startswith(ch) for ch in template_channels):
                 if clean_name not in channel_sources:
                     channel_sources[clean_name] = []
-                channel_sources[clean_name].append(url)
-                processed_count += 1
+                # URL去重
+                if url not in channel_sources[clean_name]:
+                    channel_sources[clean_name].append(url)
+                    processed_count += 1
         except ValueError:
             continue
     
     safe_print(f"处理了 {processed_count} 个直播源，按 {len(channel_sources)} 个频道分组")
     
+    # 如果没有获取到任何频道源，直接返回苏州台
+    if not channel_sources:
+        safe_print("没有获取到任何频道源，仅返回苏州台")
+        return suzhou_sources
+    
     # 为每个频道测试并选择最快的源
     filtered_sources = []
     
-    # 限制并发数，避免连接过多
-    max_workers = 20
+    # 限制并发数，避免过多连接
+    max_workers = 10
     
     # 使用线程池并行测试速度
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -129,8 +163,11 @@ def filter_live_sources():
                 
             safe_print(f"测试频道 {channel} 的 {len(urls)} 个源...")
             
+            # 限制每个频道最多测试20个源，避免太多
+            urls_to_test = urls[:20]
+            
             # 测试所有URL的速度
-            future_to_url = {executor.submit(test_url_speed, url): url for url in urls}
+            future_to_url = {executor.submit(test_url_speed, url): url for url in urls_to_test}
             speed_results = []
             
             for future in concurrent.futures.as_completed(future_to_url):
@@ -139,21 +176,21 @@ def filter_live_sources():
                     speed = future.result()
                     speed_results.append((url, speed))
                 except Exception as e:
-                    # safe_print(f"测试URL {url} 时出错: {e}")
                     speed_results.append((url, float('inf')))
             
-            # 按速度排序并选择最快的10个
+            # 按速度排序并选择最快的源
             speed_results.sort(key=lambda x: x[1])
             # 只选择速度不是无穷大的源
             valid_sources = [item for item in speed_results if item[1] < float('inf')]
             
-            # 如果有效源少于10个，则全部使用
-            fastest_urls = valid_sources[:10] if len(valid_sources) > 10 else valid_sources
-            
-            # 添加到结果列表
-            for url, speed in fastest_urls:
-                filtered_sources.append(f"{channel},{url}")
-                safe_print(f"  保留: {url} (响应时间: {speed:.2f}s)")
+            # 至少选择最快的一个，最多3个
+            if valid_sources:
+                fastest_urls = valid_sources[:3]
+                for url, speed in fastest_urls:
+                    filtered_sources.append(f"{channel},{url}")
+                    safe_print(f"  保留: {url} (响应时间: {speed:.2f}s)")
+            else:
+                safe_print(f"  频道 {channel} 没有可用源")
     
     # 添加苏州台
     filtered_sources.extend(suzhou_sources)
@@ -166,6 +203,7 @@ def main():
         # 获取当前脚本所在目录
         current_dir = Path(__file__).parent.absolute()
         safe_print(f"当前脚本目录: {current_dir}")
+        safe_print(f"当前工作目录: {os.getcwd()}")
         
         # 获取并处理直播源
         filtered_sources = filter_live_sources()
@@ -177,6 +215,9 @@ def main():
         # 写入文件 - 确保输出为 zby.txt，保存在脚本同一目录下
         output_path = current_dir / "zby.txt"
         safe_print(f"输出文件路径: {output_path}")
+        
+        # 确保目录存在
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         
         try:
             with open(output_path, "w", encoding="utf-8") as f:
