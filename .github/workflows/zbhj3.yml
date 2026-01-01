@@ -1,75 +1,97 @@
-name: 自动运行 items-hj3.py 脚本
+name: Run the items-hj3.py script automatically
 
 on:
-  # 定时触发：每天UTC时间22:00和07:00（对应北京时间06:00和15:00）
+  # Timed trigger: 22:00 and 07:00 UTC every day (corresponding to 06:00 and 15:00 Beijing time)
   schedule:
-    - cron: '0 22 * * *'  # 每天22:00 UTC（北京时间次日06:00）
-    - cron: '0 7 * * *'   # 每天07:00 UTC（北京时间15:00）
-  
-  # 允许手动触发
+    - cron: '0 22 * * *'  # 22:00 UTC every day (06:00 Beijing time the next day)
+    - cron: '0 7 * * *'   # 07:00 UTC (15:00 Beijing time) every day
+
+  # Allows manual triggering
   workflow_dispatch:
-  
-  # 当代码推送时也运行（可选）
+
+  # Runs when code pushes too (optional)
   push:
     branches: [ main, master ]
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: 检出代码
+    - name: Check out the code
       uses: actions/checkout@v3
       with:
-        # 获取完整历史记录，以便能够推送回仓库
+        # Get the full history to be able to push back to the repository
         fetch-depth: 0
-    
-    - name: 设置Python环境
+
+    - name: Set up the Python environment
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
-    
-    - name: 安装依赖
+
+    - name: Install dependencies
       run: |
         pip install requests
-        
-    - name: 运行 items-hj3.py 脚本
+
+    - name: Run items-hj3.py script
       run: |
-        echo "当前工作目录: $(pwd)"
-        echo "目录内容:"
+        echo "Current working directory: $(pwd)"
+        echo "Contents of the directory:"
         ls -la
-        echo "set目录内容:"
+        echo "set directory contents:"
         ls -la set/
-        
-        # 运行Python脚本
+
+        # Run the Python script
         python set/items-hj3.py
-        
-        # 检查是否生成了zby.txt文件
-        echo "运行后目录内容:"
+
+        # Check if zby.txt file is generated
+        echo "After running, directory content:"
         ls -la
-        
+
         if [ -f "set/zby.txt" ] || [ -f "zby.txt" ]; then
-          echo "文件生成成功"
+          echo "File generation successful"
           
-          # 确保文件在根目录
+          # Make sure the file is in the root directory
           if [ -f "set/zby.txt" ]; then
-            echo "在set目录中找到zby.txt，移动到根目录"
+            echo "Found zby.txt in the set directory, moving to root"
             mv set/zby.txt .
+          fi
+          
+          # Check the file
+          echo "File details:"
+          ls -la zby.txt
+          echo "First 10 lines of the file:"
+          head -10 zby.txt || echo "File is empty or cannot be read"
+        else
+          echo "Error: zby.txt file was not generated"
+          echo "Looking for all .txt files:"
+          find . -name "*.txt" -type f
+          exit 1
         fi
-    
-    - name: 配置Git
+
+    - name: Configure Git
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-    
-    - name: 提交生成的文件
+
+    - name: Pull latest changes before committing
       run: |
-        # 检查文件是否有变化
+        git pull origin ${{ github.ref_name }} --rebase || echo "Pull failed or no changes"
+
+    - name: Submit the generated file
+      run: |
+        # Check if the file exists
+        if [ ! -f "zby.txt" ]; then
+          echo "Error: zby.txt file does not exist"
+          exit 1
+        fi
+        
+        # Check if the file has changed
         if git diff --quiet zby.txt; then
-          echo "文件没有变化，无需提交"
+          echo "No changes in the file, no submission required"
         else
-          echo "检测到文件变化，准备提交"
+          echo "File changes detected, ready for submission"
           git add zby.txt
-          git commit -m "自动更新: items-hj3.py 生成的zby.txt文件 [$(date +'%Y-%m-%d %H:%M:%S')]"
+          git commit -m "Auto-update: items-hj3.py generated zby.txt file [$(date +'%Y-%m-%d %H:%M:%S')]"
           git push origin HEAD
         fi
