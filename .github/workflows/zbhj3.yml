@@ -44,27 +44,17 @@ jobs:
         # 运行Python脚本
         python set/items-hj3.py
         
-        # 检查是否生成了zb3.txt文件
+        # 检查是否生成了zby.txt文件
         echo "运行后目录内容:"
         ls -la
         
-        if [ -f "set/zb3.txt" ] || [ -f "zb3.txt" ]; then
+        if [ -f "set/zby.txt" ] || [ -f "zby.txt" ]; then
           echo "文件生成成功"
           
           # 确保文件在根目录
-          if [ -f "set/zb3.txt" ]; then
-            echo "在set目录中找到zb3.txt，移动到根目录"
-            mv set/zb3.txt .
-          fi
-          
-          ls -la zb3.txt
-          echo "文件前10行内容:"
-          head -10 zb3.txt
-        else
-          echo "警告: zb3.txt 文件未生成"
-          echo "查找所有.txt文件:"
-          find . -name "*.txt" -type f
-          exit 1
+          if [ -f "set/zby.txt" ]; then
+            echo "在set目录中找到zby.txt，移动到根目录"
+            mv set/zby.txt .
         fi
     
     - name: 配置Git
@@ -75,11 +65,11 @@ jobs:
     - name: 提交生成的文件
       run: |
         # 检查文件是否有变化
-        if git diff --quiet zb3.txt; then
+        if git diff --quiet zby.txt; then
           echo "文件没有变化，无需提交"
         else
           echo "检测到文件变化，准备提交"
-          git add zb3.txt
-          git commit -m "自动更新: items-hj3.py 生成的zb3.txt文件 [$(date +'%Y-%m-%d %H:%M:%S')]"
+          git add zby.txt
+          git commit -m "自动更新: items-hj3.py 生成的zby.txt文件 [$(date +'%Y-%m-%d %H:%M:%S')]"
           git push origin HEAD
         fi
