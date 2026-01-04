@@ -64,136 +64,75 @@ jobs:
         echo "查找目录操作:"
         grep -n "os\.\|path\.\|mkdir\|chdir" set/items-hj3.py || echo "未找到目录操作"
 
-    - name: 运行脚本并监控文件系统
-      id: run-monitored
-      run: |
-        echo "=== 运行脚本并监控文件系统变化 ==="
-        
-        # 记录运行前的文件状态
-        echo "运行前文件列表:"
-        find . -type f -not -path "./.git/*" 2>/dev/null | sort > /tmp/before.txt
-        echo "运行前文件总数: $(wc -l < /tmp/before.txt)"
-        
-        # 记录运行前的zby.txt位置
-        echo "运行前查找zby.txt:"
-        find . -name "zby.txt" -type f 2>/dev/null || echo "运行前没有zby.txt"
-        
-        # 运行脚本并捕获输出 - 使用更简单的方法
-        echo "开始运行脚本..."
-        
-        # 创建Python脚本文件来运行目标脚本
-        cat > /tmp/run_script.py << 'EOF'
-import subprocess
-import sys
-
-# 运行脚本并捕获所有输出
-result = subprocess.run(
-    [sys.executable, 'set/items-hj3.py'],
-    capture_output=True,
-    text=True,
-    timeout=300
-)
-
-print('退出码:', result.returncode)
-print('标准输出:')
-print(result.stdout)
-if result.stderr:
-    print('标准错误:')
-    print(result.stderr)
-EOF
-        
-        python3 /tmp/run_script.py 2>&1 | tee /tmp/script_run.txt
-        
-        # 记录运行后的文件状态
-        echo "运行后文件列表:"
-        find . -type f -not -path "./.git/*" 2>/dev/null | sort > /tmp/after.txt
-        echo "运行后文件总数: $(wc -l < /tmp/after.txt)"
-        
-        # 查找新创建的文件
-        echo "=== 新创建的文件 ==="
-        comm -13 /tmp/before.txt /tmp/after.txt 2>/dev/null || echo "无法比较文件列表"
-        
-        # 查找修改的文件
-        echo "=== 最近修改的文件 ==="
-        find . -type f -not -path "./.git/*" -mmin -5 2>/dev/null || echo "没有最近修改的文件"
-        
-        # 记录脚本输出
-        script_output=$(cat /tmp/script_run.txt)
-        echo "SCRIPT_OUTPUT<<EOF" >> $GITHUB_OUTPUT
-        echo "$script_output" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
-
-    - name: 直接测试脚本执行
-      id: test-script
-      run: |
-        echo "=== 直接测试脚本执行 ==="
-        
-        # 创建测试目录
-        mkdir -p /tmp/test_run
-        cd /tmp/test_run
-        
-        # 复制脚本
-        cp -r ${{ github.workspace }}/set ./ 2>/dev/null || echo "无法复制set目录"
-        
-        echo "测试目录: $(pwd)"
-        echo "目录内容:"
-        ls -la
-        
-        # 直接运行脚本并查看输出
-        echo "运行脚本:"
-        python set/items-hj3.py 2>&1 | tee output.txt
-        
-        echo "运行后目录内容:"
-        ls -la
-        
-        echo "所有文件:"
-        find . -type f
-        
-        # 如果有输出文件，复制回工作区
-        if [ -f "zby.txt" ]; then
-          echo "在测试目录中找到zby.txt，复制回工作区"
-          cp zby.txt ${{ github.workspace }}/
-        fi
-
-    - name: 简单运行脚本并捕获输出
+    - name: 简单运行脚本并检查输出
       id: simple-run
       run: |
-        echo "=== 简单运行脚本并捕获输出 ==="
+        echo "=== 简单运行脚本并检查输出 ==="
         cd ${{ github.workspace }}
         
-        echo "直接运行脚本:"
-        output=$(python set/items-hj3.py 2>&1)
+        # 运行脚本并捕获输出
+        echo "运行脚本: set/items-hj3.py"
+        python_output=$(python set/items-hj3.py 2>&1)
         exit_code=$?
         
-        echo "退出码: $exit_code"
-        echo "输出:"
-        echo "$output"
+        echo "脚本退出码: $exit_code"
+        echo "脚本输出长度: ${#python_output} 字符"
         
-        # 如果脚本有输出，保存到zby.txt
-        if [ -n "$output" ]; then
-          echo "$output" > zby.txt
-          echo "已将脚本输出保存到 zby.txt"
+        # 保存输出到临时文件用于调试
+        echo "$python_output" > /tmp/script_output.txt
+        
+        # 检查是否生成了zby.txt
+        echo "检查是否生成了zby.txt..."
+        if [ -f "set/zby.txt" ]; then
+          echo "在set目录中找到zby.txt"
+          mv set/zby.txt .
+          echo "已将set/zby.txt移动到根目录"
         elif [ -f "zby.txt" ]; then
-          echo "zby.txt 已存在"
+          echo "在根目录中找到zby.txt"
         else
-          echo "# 脚本执行完成，但没有输出" > zby.txt
-          echo "# 执行时间: $(date)" >> zby.txt
-          echo "创建了空的 zby.txt 文件"
+          echo "未找到zby.txt文件"
+          
+          # 检查脚本是否有输出
+          if [ -n "$python_output" ]; then
+            echo "脚本有输出，将输出保存为zby.txt"
+            echo "$python_output" > zby.txt
+            echo "已将脚本输出保存到zby.txt"
+          else
+            echo "脚本没有输出，创建空zby.txt文件"
+            echo "# 脚本执行完成但没有输出" > zby.txt
+            echo "# 执行时间: $(date)" >> zby.txt
+          fi
         fi
+        
+        # 确保zby.txt存在
+        if [ ! -f "zby.txt" ]; then
+          echo "错误: zby.txt未创建"
+          exit 1
+        fi
+        
+        echo "zby.txt文件信息:"
+        ls -la zby.txt
+        echo "文件内容预览:"
+        head -5 zby.txt || echo "文件为空或无法读取"
 
     - name: 最终检查并提交
       run: |
-        echo "=== 最终检查 ==="
+        echo "=== 最终检查并提交 ==="
         cd ${{ github.workspace }}
         
         # 确保zby.txt存在
         if [ ! -f "zby.txt" ]; then
-          echo "zby.txt不存在，创建空文件"
-          echo "# 自动生成 - 原始脚本未产生输出" > zby.txt
-          echo "# 生成时间: $(date)" >> zby.txt
+          echo "错误: zby.txt不存在"
+          exit 1
         fi
         
-        echo "文件内容:"
+        # 检查文件是否为空
+        if [ ! -s "zby.txt" ]; then
+          echo "警告: zby.txt文件为空，添加时间戳"
+          echo "# 更新时间: $(date)" >> zby.txt
+        fi
+        
+        echo "最终文件内容:"
         cat zby.txt
         
         # 配置Git
@@ -201,26 +140,39 @@ EOF
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         
         # 拉取最新更改
+        echo "拉取最新更改..."
         git pull origin ${{ github.ref_name }} --no-rebase 2>/dev/null || echo "拉取失败或无需拉取"
         
-        # 添加并提交
-        git add zby.txt
-        git commit -m "更新: items-hj3.py运行结果 [$(date +'%Y-%m-%d %H:%M:%S')]" || echo "没有更改或提交失败"
-        
-        # 推送
-        git push origin ${{ github.ref_name }} 2>/dev/null || echo "推送失败或无需推送"
+        # 检查是否有更改
+        echo "检查文件更改..."
+        if git diff --quiet zby.txt 2>/dev/null; then
+          echo "文件无更改，无需提交"
+        else
+          echo "检测到文件更改，准备提交"
+          
+          # 显示更改
+          echo "更改内容:"
+          git diff zby.txt || echo "无法显示差异"
+          
+          # 添加并提交
+          git add zby.txt
+          git commit -m "自动更新: items-hj3.py运行结果 [$(date +'%Y-%m-%d %H:%M:%S')]"
+          
+          # 推送
+          echo "推送更改..."
+          git push origin ${{ github.ref_name }}
+        fi
 
-    - name: 生成分析报告
+    - name: 工作流总结
       run: |
-        echo "=== 分析报告 ==="
-        echo "脚本分析完成"
+        echo "=== 工作流执行总结 ==="
+        echo "执行时间: $(date)"
+        echo "触发事件: ${{ github.event_name }}"
+        echo "分支: ${{ github.ref_name }}"
         
-        echo "最终状态:"
         if [ -f "${{ github.workspace }}/zby.txt" ]; then
-          echo "✅ zby.txt 已创建"
+          echo "✅ zby.txt 已创建并提交"
           echo "文件大小: $(wc -l < ${{ github.workspace }}/zby.txt) 行"
-          echo "文件内容预览:"
-          head -5 ${{ github.workspace }}/zby.txt
         else
           echo "❌ zby.txt 未创建"
         fi
