@@ -25,42 +25,79 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: 直接生成zby.txt文件
+    - name: 安装依赖
       run: |
-        echo "# 自动生成的zby.txt" > zby.txt
+        echo "安装 requests 模块..."
+        pip install requests
+        echo "依赖安装完成"
+
+    - name: 生成zby.txt文件
+      run: |
+        echo "=== 开始生成 zby.txt ==="
+        echo "当前目录: $(pwd)"
+        
+        # 创建zby.txt文件
+        echo "# zby.txt 文件" > zby.txt
         echo "# 生成时间: $(date '+%Y-%m-%d %H:%M:%S')" >> zby.txt
-        echo "# 脚本: set/items-hj3.py" >> zby.txt
         echo "# =====================" >> zby.txt
         
-        # 尝试运行脚本，如果失败也无所谓
-        echo "正在尝试运行脚本..." >> zby.txt
-        echo "========================" >> zby.txt
+        # 运行脚本并捕获输出
+        echo "运行脚本: set/items-hj3.py"
+        python_output=$(python set/items-hj3.py 2>&1)
+        exit_code=$?
         
-        # 尝试运行脚本并将输出追加到文件
-        python set/items-hj3.py 2>&1 >> zby.txt || echo "脚本执行失败或没有输出" >> zby.txt
+        echo "# 脚本退出码: $exit_code" >> zby.txt
+        echo "# =====================" >> zby.txt
         
-        echo "========================" >> zby.txt
+        if [ -n "$python_output" ]; then
+          echo "# 脚本输出:" >> zby.txt
+          echo "$python_output" >> zby.txt
+        else
+          echo "# 脚本没有输出" >> zby.txt
+        fi
+        
+        echo "# =====================" >> zby.txt
         echo "# 文件生成完成" >> zby.txt
         
-        # 检查文件大小
-        echo "zby.txt文件已生成，大小: $(wc -l < zby.txt) 行"
+        echo "zby.txt已创建"
+        echo "文件内容:"
+        cat zby.txt
+        echo "文件大小: $(wc -l < zby.txt) 行"
 
-    - name: 提交文件
+    - name: 强制提交文件
       run: |
+        echo "=== 强制提交文件 ==="
+        
         # 配置Git
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         
-        # 拉取最新
-        git pull origin ${{ github.ref_name }} 2>/dev/null || true
+        # 添加文件
+        git add zby.txt
         
         # 检查是否有更改
-        if git status --porcelain zby.txt | grep -q 'M'; then
-          echo "文件有更改，提交..."
-          git add zby.txt
-          git commit -m "更新zby.txt [$(date +'%Y-%m-%d %H:%M:%S')]"
-          git push origin ${{ github.ref_name }}
-          echo "✅ 文件已提交"
+        if git diff --cached --quiet; then
+          echo "没有更改，创建空提交以确保文件存在"
+          git commit --allow-empty -m "更新zby.txt [$(date +'%Y-%m-%d %H:%M:%S')]"
         else
-          echo "文件无更改，跳过提交"
+          echo "检测到更改，正常提交"
+          git commit -m "更新zby.txt [$(date +'%Y-%m-%d %H:%M:%S')]"
         fi
+        
+        # 推送更改
+        git push origin ${{ github.ref_name }}
+        echo "✅ 文件已提交到仓库"
+
+    - name: 验证文件已提交
+      run: |
+        echo "=== 验证文件 ==="
+        echo "检查zby.txt是否存在:"
+        ls -la zby.txt
+        
+        echo "文件内容:"
+        cat zby.txt
+        
+        echo "文件状态:"
+        git status zby.txt || echo "git状态检查失败"
+        
+        echo "✅ 工作流执行完成"
