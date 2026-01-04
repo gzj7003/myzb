@@ -50,31 +50,10 @@ jobs:
           echo "检测到直播源格式的输出"
           echo "$SCRIPT_OUTPUT" > zby.txt
           echo "已将纯净输出保存到 zby.txt"
-          echo "has_valid_output=true" >> $GITHUB_OUTPUT
-        else
-          echo "输出不是预期的直播源格式，使用备用数据"
-          echo "has_valid_output=false" >> $GITHUB_OUTPUT
-          
-          # 使用您提供的示例数据作为备用
-          cat > zby.txt << 'EOF'
-浙江卫视HDsh,http://222.67.88.55:4022/udp/239.45.3.178:5140
-江苏卫视HDsh,http://222.67.88.55:4022/udp/239.45.3.177:5140
-东方卫视HDsh,http://222.67.88.55:4022/udp/239.45.3.146:5140
-北京卫视HDsh,http://222.67.88.55:4022/udp/239.45.3.229:5140
-苏州新闻综合,http://live-auth.51kandianshi.com/szgd/csztv1.m3u8
-苏州社会经济,http://live-auth.51kandianshi.com/szgd/csztv2.m3u8
-苏州文化生活,http://live-auth.51kandianshi.com/szgd/csztv3.m3u8
-苏州生活资讯,http://live-auth.51kandianshi.com/szgd/csztv5.m3u8
-苏州生活资讯,http://180.108.166.124:4022/rtp/239.49.8.116:8000
-苏州生活资讯,http://tylive.kan0512.com/norecord/norecord_csztv5/playlist.m3u8
-苏州生活资讯,http://liveshowbak2.kan0512.com/norecord/norecord_sbs5/playlist.m3u8
-苏州生活资讯,rtmp://csztv.2500sz.com/live/c05
-EOF
-        fi
-        
-        echo "zby.txt 行数: $(wc -l < zby.txt)"
-        echo "zby.txt 前5行:"
-        head -5 zby.txt
+          echo "has_valid_output=true" >> $GITHUB_OUTPUT   
+          echo "zby.txt 行数: $(wc -l < zby.txt)"
+          echo "zby.txt 前5行:"
+          head -5 zby.txt
 
     - name: 提交文件
       run: |
