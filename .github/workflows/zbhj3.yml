@@ -4,9 +4,7 @@ on:
   schedule:
     - cron: '0 22 * * *'
     - cron: '0 7 * * *'
-
   workflow_dispatch:
-
   push:
     branches: [ main, master ]
 
@@ -22,129 +20,47 @@ jobs:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set up Python environment
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
 
-    - name: Install dependencies
+    - name: 直接生成zby.txt文件
       run: |
-        pip install requests
-
-    - name: 运行脚本并生成zby.txt
-      id: run-script
-      run: |
-        echo "=== 运行脚本 ==="
-        echo "工作目录: $(pwd)"
-        
-        # 确保脚本存在
-        if [ ! -f "set/items-hj3.py" ]; then
-          echo "错误: 找不到 set/items-hj3.py"
-          echo "目录内容:"
-          ls -la
-          exit 1
-        fi
-        
-        # 运行脚本并捕获所有输出
-        echo "运行 set/items-hj3.py..."
-        
-        # 尝试运行脚本，无论成功或失败都继续
-        set +e
-        SCRIPT_OUTPUT=$(python set/items-hj3.py 2>&1)
-        EXIT_CODE=$?
-        set -e
-        
-        echo "脚本退出码: $EXIT_CODE"
-        
-        # 创建zby.txt文件
-        echo "=== 创建zby.txt文件 ==="
-        
-        # 文件头部信息
-        echo "# zby.txt - 自动生成" > zby.txt
-        echo "# 生成时间: $(date)" >> zby.txt
+        echo "# 自动生成的zby.txt" > zby.txt
+        echo "# 生成时间: $(date '+%Y-%m-%d %H:%M:%S')" >> zby.txt
         echo "# 脚本: set/items-hj3.py" >> zby.txt
-        echo "# 退出码: $EXIT_CODE" >> zby.txt
-        echo "# =========================" >> zby.txt
+        echo "# =====================" >> zby.txt
         
-        # 如果有脚本输出，添加到文件中
-        if [ -n "$SCRIPT_OUTPUT" ]; then
-          echo "# 脚本输出:" >> zby.txt
-          echo "$SCRIPT_OUTPUT" >> zby.txt
-        else
-          echo "# 脚本没有输出" >> zby.txt
-        fi
+        # 尝试运行脚本，如果失败也无所谓
+        echo "正在尝试运行脚本..." >> zby.txt
+        echo "========================" >> zby.txt
         
-        # 添加分隔符和示例数据（如果需要）
-        echo "# =========================" >> zby.txt
-        echo "# 示例数据（如果没有生成数据）" >> zby.txt
-        echo "项目1,值1" >> zby.txt
-        echo "项目2,值2" >> zby.txt
-        echo "项目3,值3" >> zby.txt
+        # 尝试运行脚本并将输出追加到文件
+        python set/items-hj3.py 2>&1 >> zby.txt || echo "脚本执行失败或没有输出" >> zby.txt
         
-        echo "zby.txt 已创建"
-        echo "文件大小: $(wc -l < zby.txt) 行"
-        echo "文件内容预览:"
-        head -10 zby.txt
+        echo "========================" >> zby.txt
+        echo "# 文件生成完成" >> zby.txt
         
-        # 保存退出码到环境变量
-        echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
-        echo "has_output=$(if [ -n "$SCRIPT_OUTPUT" ]; then echo "true"; else echo "false"; fi)" >> $GITHUB_OUTPUT
+        # 检查文件大小
+        echo "zby.txt文件已生成，大小: $(wc -l < zby.txt) 行"
 
-    - name: 提交文件到仓库
+    - name: 提交文件
       run: |
-        echo "=== 提交文件到仓库 ==="
-        
-        # 配置Git用户
+        # 配置Git
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         
-        # 拉取最新更改，避免冲突
-        echo "拉取最新更改..."
-        git pull origin ${{ github.ref_name }} --no-rebase 2>/dev/null || echo "拉取失败或无更改"
+        # 拉取最新
+        git pull origin ${{ github.ref_name }} 2>/dev/null || true
         
-        # 检查文件是否有更改
-        if git diff --quiet zby.txt 2>/dev/null; then
-          echo "zby.txt 没有更改，无需提交"
-        else
-          echo "检测到zby.txt有更改"
-          
-          # 显示更改内容
-          echo "更改内容:"
-          git diff zby.txt || echo "无法显示差异"
-          
-          # 添加并提交文件
+        # 检查是否有更改
+        if git status --porcelain zby.txt | grep -q 'M'; then
+          echo "文件有更改，提交..."
           git add zby.txt
-          
-          # 根据脚本执行状态设置提交信息
-          if [ "${{ steps.run-script.outputs.exit_code }}" == "0" ]; then
-            COMMIT_MSG="自动更新: items-hj3.py执行成功 [$(date +'%Y-%m-%d %H:%M:%S')]"
-          else
-            COMMIT_MSG="自动更新: items-hj3.py执行失败 [$(date +'%Y-%m-%d %H:%M:%S')]"
-          fi
-          
-          git commit -m "$COMMIT_MSG"
-          
-          # 推送更改
-          echo "推送更改到仓库..."
+          git commit -m "更新zby.txt [$(date +'%Y-%m-%d %H:%M:%S')]"
           git push origin ${{ github.ref_name }}
-          
-          echo "提交完成: $COMMIT_MSG"
-        fi
-
-    - name: 工作流总结
-      run: |
-        echo "=== 工作流执行总结 ==="
-        echo "执行时间: $(date)"
-        echo "触发方式: ${{ github.event_name }}"
-        echo "目标分支: ${{ github.ref_name }}"
-        echo "脚本退出码: ${{ steps.run-script.outputs.exit_code }}"
-        echo "脚本是否有输出: ${{ steps.run-script.outputs.has_output }}"
-        
-        if [ -f "zby.txt" ]; then
-          LINE_COUNT=$(wc -l < zby.txt)
-          echo "✅ zby.txt 已生成: $LINE_COUNT 行"
-          echo "文件内容预览:"
-          head -5 zby.txt
+          echo "✅ 文件已提交"
         else
-          echo "❌ zby.txt 未生成"
+          echo "文件无更改，跳过提交"
         fi
