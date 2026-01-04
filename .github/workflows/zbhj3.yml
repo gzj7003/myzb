@@ -78,11 +78,11 @@ jobs:
         echo "运行前查找zby.txt:"
         find . -name "zby.txt" -type f 2>/dev/null || echo "运行前没有zby.txt"
         
-        # 运行脚本，监控系统调用
+        # 运行脚本并捕获输出 - 使用更简单的方法
         echo "开始运行脚本..."
         
-        # 使用简单的Python代码来运行脚本并捕获输出
-        python3 -c "
+        # 创建Python脚本文件来运行目标脚本
+        cat > /tmp/run_script.py << 'EOF'
 import subprocess
 import sys
 
@@ -100,7 +100,9 @@ print(result.stdout)
 if result.stderr:
     print('标准错误:')
     print(result.stderr)
-" 2>&1 | tee /tmp/script_run.txt
+EOF
+        
+        python3 /tmp/run_script.py 2>&1 | tee /tmp/script_run.txt
         
         # 记录运行后的文件状态
         echo "运行后文件列表:"
@@ -153,30 +155,30 @@ if result.stderr:
           cp zby.txt ${{ github.workspace }}/
         fi
 
-    - name: 模拟脚本可能的行为
-      id: simulate-script
+    - name: 简单运行脚本并捕获输出
+      id: simple-run
       run: |
-        echo "=== 模拟脚本可能的行为 ==="
-        
-        # 检查脚本是否只是打印输出而不写入文件
+        echo "=== 简单运行脚本并捕获输出 ==="
         cd ${{ github.workspace }}
         
-        echo "尝试直接执行脚本并将输出重定向到文件:"
-        python set/items-hj3.py > simulated_zby.txt 2>&1
+        echo "直接运行脚本:"
+        output=$(python set/items-hj3.py 2>&1)
+        exit_code=$?
         
-        if [ -s "simulated_zby.txt" ]; then
-          echo "脚本有输出，已保存到 simulated_zby.txt"
-          echo "文件内容预览:"
-          head -20 simulated_zby.txt
-          
-          # 重命名为zby.txt
-          mv simulated_zby.txt zby.txt
-          echo "已将输出保存为 zby.txt"
+        echo "退出码: $exit_code"
+        echo "输出:"
+        echo "$output"
+        
+        # 如果脚本有输出，保存到zby.txt
+        if [ -n "$output" ]; then
+          echo "$output" > zby.txt
+          echo "已将脚本输出保存到 zby.txt"
+        elif [ -f "zby.txt" ]; then
+          echo "zby.txt 已存在"
         else
-          echo "脚本没有输出内容"
-          # 创建空的zby.txt
-          echo "# 脚本执行完成但没有输出" > zby.txt
+          echo "# 脚本执行完成，但没有输出" > zby.txt
           echo "# 执行时间: $(date)" >> zby.txt
+          echo "创建了空的 zby.txt 文件"
         fi
 
     - name: 最终检查并提交
@@ -212,14 +214,13 @@ if result.stderr:
       run: |
         echo "=== 分析报告 ==="
         echo "脚本分析完成"
-        echo "脚本输出:"
-        echo "${{ steps.run-monitored.outputs.SCRIPT_OUTPUT }}" | head -30
-        echo "..."
         
         echo "最终状态:"
         if [ -f "${{ github.workspace }}/zby.txt" ]; then
           echo "✅ zby.txt 已创建"
           echo "文件大小: $(wc -l < ${{ github.workspace }}/zby.txt) 行"
+          echo "文件内容预览:"
+          head -5 ${{ github.workspace }}/zby.txt
         else
           echo "❌ zby.txt 未创建"
         fi
