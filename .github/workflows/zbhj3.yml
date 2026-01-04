@@ -1,97 +1,230 @@
-name: Run the items-hj3.py script automatically
+name: Run items-hj3.py script automatically
 
 on:
-  # Timed trigger: 22:00 and 07:00 UTC every day (corresponding to 06:00 and 15:00 Beijing time)
+  # 定时触发：每天UTC时间22:00和07:00（对应北京时间次日06:00和当天15:00）
   schedule:
-    - cron: '0 22 * * *'  # 22:00 UTC every day (06:00 Beijing time the next day)
-    - cron: '0 7 * * *'   # 07:00 UTC (15:00 Beijing time) every day
+    - cron: '0 22 * * *'  # 每天22:00 UTC（北京时间次日06:00）
+    - cron: '0 7 * * *'   # 每天07:00 UTC（北京时间15:00）
 
-  # Allows manual triggering
+  # 允许手动触发
   workflow_dispatch:
 
-  # Runs when code pushes too (optional)
+  # 代码推送时也运行（可选）
   push:
     branches: [ main, master ]
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
+    
+    # 设置超时时间，避免长时间挂起
+    timeout-minutes: 15
 
     steps:
     - name: Check out the code
       uses: actions/checkout@v3
       with:
-        # Get the full history to be able to push back to the repository
+        # 获取完整历史记录以便推回仓库
         fetch-depth: 0
+        # 添加令牌权限用于推送
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set up the Python environment
+    - name: Set up Python environment
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
 
     - name: Install dependencies
       run: |
+        echo "Installing Python dependencies..."
         pip install requests
+        echo "Dependencies installed successfully."
 
-    - name: Run items-hj3.py script
+    - name: Check directory structure
       run: |
         echo "Current working directory: $(pwd)"
-        echo "Contents of the directory:"
+        echo "Directory contents:"
         ls -la
-        echo "set directory contents:"
-        ls -la set/
+        echo "set/ directory contents:"
+        if [ -d "set" ]; then
+          ls -la set/
+        else
+          echo "Error: 'set' directory not found!"
+          exit 1
+        fi
 
-        # Run the Python script
+    - name: Run items-hj3.py script
+      id: run-script
+      run: |
+        echo "Running Python script..."
+        
+        # 检查脚本是否存在
+        if [ ! -f "set/items-hj3.py" ]; then
+          echo "Error: set/items-hj3.py not found!"
+          exit 1
+        fi
+        
+        # 运行脚本，捕获退出状态
         python set/items-hj3.py
+        script_exit_code=$?
+        
+        if [ $script_exit_code -ne 0 ]; then
+          echo "Error: Python script failed with exit code $script_exit_code"
+          exit $script_exit_code
+        fi
+        
+        echo "Script executed successfully."
 
-        # Check if zby.txt file is generated
-        echo "After running, directory content:"
-        ls -la
-
-        if [ -f "set/zby.txt" ] || [ -f "zby.txt" ]; then
-          echo "File generation successful"
+    - name: Locate and prepare generated file
+      id: locate-file
+      run: |
+        echo "Looking for generated files..."
+        
+        # 首先检查常见位置
+        if [ -f "set/zby.txt" ]; then
+          echo "Found zby.txt in set/ directory"
+          mv set/zby.txt ./
+          echo "File moved to root directory"
+        elif [ -f "zby.txt" ]; then
+          echo "Found zby.txt in root directory"
+        else
+          # 尝试查找其他可能的.txt文件
+          echo "Searching for generated .txt files..."
+          found_files=$(find . -name "*.txt" -type f -newer /proc/self 2>/dev/null || find . -name "*.txt" -type f)
           
-          # Make sure the file is in the root directory
-          if [ -f "set/zby.txt" ]; then
-            echo "Found zby.txt in the set directory, moving to root"
-            mv set/zby.txt .
+          if [ -n "$found_files" ]; then
+            echo "Found the following .txt files:"
+            echo "$found_files"
+            
+            # 取第一个找到的txt文件作为结果
+            first_file=$(echo "$found_files" | head -1)
+            echo "Using file: $first_file"
+            cp "$first_file" ./zby.txt
+          else
+            echo "Error: No .txt files generated!"
+            echo "Checking all files in set directory:"
+            ls -la set/ 2>/dev/null || echo "set/ directory not accessible"
+            exit 1
           fi
+        fi
+        
+        # 验证文件内容
+        if [ -f "zby.txt" ]; then
+          file_size=$(stat -f%z zby.txt 2>/dev/null || stat -c%s zby.txt 2>/dev/null || echo "unknown")
+          echo "File zby.txt created successfully (size: ${file_size} bytes)"
           
-          # Check the file
+          # 输出文件信息用于调试
           echo "File details:"
           ls -la zby.txt
-          echo "First 10 lines of the file:"
-          head -10 zby.txt || echo "File is empty or cannot be read"
+          
+          echo "First 5 lines of the file:"
+          head -5 zby.txt || echo "File may be empty"
+          
+          # 检查文件是否有实际内容
+          if [ ! -s "zby.txt" ]; then
+            echo "Warning: zby.txt is empty!"
+          fi
         else
-          echo "Error: zby.txt file was not generated"
-          echo "Looking for all .txt files:"
-          find . -name "*.txt" -type f
+          echo "Error: zby.txt was not created!"
           exit 1
         fi
 
     - name: Configure Git
       run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global pull.rebase false
 
-    - name: Pull latest changes before committing
+    - name: Pull latest changes
       run: |
-        git pull origin ${{ github.ref_name }} --rebase || echo "Pull failed or no changes"
+        echo "Pulling latest changes from ${{ github.ref_name }}..."
+        git fetch origin
+        git checkout ${{ github.ref_name }}
+        git pull origin ${{ github.ref_name }} || echo "Pull completed with conflicts or no changes"
 
-    - name: Submit the generated file
+    - name: Commit and push changes
+      id: commit
       run: |
-        # Check if the file exists
+        echo "Checking for changes..."
+        
+        # 检查文件是否存在
         if [ ! -f "zby.txt" ]; then
-          echo "Error: zby.txt file does not exist"
+          echo "Error: zby.txt not found!"
           exit 1
         fi
         
-        # Check if the file has changed
+        # 检查是否有未提交的更改
         if git diff --quiet zby.txt; then
-          echo "No changes in the file, no submission required"
+          echo "No changes detected in zby.txt"
+          echo "has_changes=false" >> $GITHUB_OUTPUT
         else
-          echo "File changes detected, ready for submission"
+          echo "Changes detected in zby.txt"
+          
+          # 显示差异（仅限前几行）
+          echo "Changes preview:"
+          git diff --stat zby.txt || echo "Cannot show diff"
+          
+          # 添加并提交文件
           git add zby.txt
-          git commit -m "Auto-update: items-hj3.py generated zby.txt file [$(date +'%Y-%m-%d %H:%M:%S')]"
-          git push origin HEAD
+          
+          # 根据触发方式设置提交信息
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            commit_msg="Manual update: items-hj3.py generated zby.txt [$(date +'%Y-%m-%d %H:%M:%S')]"
+          else
+            commit_msg="Auto-update: items-hj3.py generated zby.txt [$(date +'%Y-%m-%d %H:%M:%S')]"
+          fi
+          
+          git commit -m "$commit_msg"
+          
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+          echo "commit_message=$commit_msg" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Push changes to repository
+      if: steps.commit.outputs.has_changes == 'true'
+      run: |
+        echo "Pushing changes to ${{ github.ref_name }} branch..."
+        
+        # 重试机制
+        max_retries=3
+        retry_count=0
+        
+        while [ $retry_count -lt $max_retries ]; do
+          if git push origin HEAD:${{ github.ref_name }}; then
+            echo "Push successful!"
+            exit 0
+          else
+            retry_count=$((retry_count+1))
+            echo "Push failed (attempt $retry_count/$max_retries)"
+            
+            if [ $retry_count -lt $max_retries ]; then
+              echo "Retrying after 5 seconds..."
+              sleep 5
+              echo "Pulling latest changes before retry..."
+              git pull origin ${{ github.ref_name }} --rebase || git pull origin ${{ github.ref_name }}
+            fi
+          fi
+        done
+        
+        echo "Error: Failed to push after $max_retries attempts"
+        exit 1
+
+    - name: Summary
+      run: |
+        echo "=== Workflow Summary ==="
+        echo "Script executed: $(date)"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Trigger: ${{ github.event_name }}"
+        
+        if [ -f "zby.txt" ]; then
+          line_count=$(wc -l < zby.txt || echo "N/A")
+          echo "Generated file: zby.txt ($line_count lines)"
+          
+          if [ "${{ steps.commit.outputs.has_changes }}" == "true" ]; then
+            echo "Status: Changes committed and pushed"
+          else
+            echo "Status: No changes to commit"
+          fi
+        else
+          echo "Status: No file generated"
         fi
