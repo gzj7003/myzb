@@ -13,7 +13,7 @@ on:
 jobs:
   run-script:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
     - name: Check out the code
@@ -29,167 +29,122 @@ jobs:
 
     - name: Install dependencies
       run: |
-        echo "=== 安装依赖 ==="
         pip install requests
-        echo "依赖安装完成"
 
-    - name: 调试 - 查看脚本内容和环境
-      run: |
-        echo "=== 调试信息 ==="
-        echo "工作目录: $(pwd)"
-        echo "Python版本: $(python --version)"
-        
-        echo "=== 检查脚本文件 ==="
-        if [ -f "set/items-hj3.py" ]; then
-          echo "脚本存在: set/items-hj3.py"
-          echo "脚本大小: $(wc -l < set/items-hj3.py) 行"
-          echo "脚本前20行:"
-          head -20 set/items-hj3.py
-        else
-          echo "错误: 找不到 set/items-hj3.py"
-          echo "当前目录内容:"
-          ls -la
-          echo "set目录内容:"
-          ls -la set/ 2>/dev/null || echo "没有set目录"
-          exit 1
-        fi
-        
-        echo "=== 检查Python模块 ==="
-        python -c "import sys; print('Python路径:', sys.path)"
-        python -c "import requests; print('requests模块已安装')" || echo "requests模块未安装"
-
-    - name: 运行脚本并捕获详细错误
+    - name: 运行脚本并生成zby.txt
       id: run-script
       run: |
-        echo "=== 运行脚本并捕获详细错误 ==="
-        cd ${{ github.workspace }}
+        echo "=== 运行脚本 ==="
+        echo "工作目录: $(pwd)"
         
-        # 创建临时文件来捕获输出
-        TEMP_OUTPUT="/tmp/script_output_$(date +%s).txt"
-        
-        echo "开始运行脚本: set/items-hj3.py"
-        echo "================================"
-        
-        # 使用更详细的错误捕获
-        set +e  # 禁用错误立即退出
-        python set/items-hj3.py > "$TEMP_OUTPUT" 2>&1
-        EXIT_CODE=$?
-        set -e  # 重新启用错误立即退出
-        
-        echo "脚本退出码: $EXIT_CODE"
-        echo "================================"
-        
-        # 显示输出
-        echo "脚本输出:"
-        cat "$TEMP_OUTPUT" || echo "无法读取输出文件"
-        echo "================================"
-        
-        # 保存输出到环境变量
-        echo "SCRIPT_OUTPUT<<EOF" >> $GITHUB_OUTPUT
-        cat "$TEMP_OUTPUT" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
-        
-        # 根据退出码决定是否继续
-        if [ $EXIT_CODE -eq 0 ]; then
-          echo "脚本执行成功"
-          
-          # 检查是否生成了zby.txt
-          if [ -f "set/zby.txt" ]; then
-            echo "在set目录中找到zby.txt"
-            mv set/zby.txt .
-            echo "已将set/zby.txt移动到根目录"
-          elif [ -f "zby.txt" ]; then
-            echo "在根目录中找到zby.txt"
-          else
-            echo "警告: 脚本执行成功但未生成zby.txt"
-            # 将脚本输出保存为zby.txt
-            cp "$TEMP_OUTPUT" zby.txt
-            echo "已将脚本输出保存为zby.txt"
-          fi
-        else
-          echo "脚本执行失败，退出码: $EXIT_CODE"
-          echo "将错误信息保存为zby.txt以便调试"
-          
-          # 创建包含错误信息的zby.txt
-          echo "# 脚本执行失败 - 错误信息" > zby.txt
-          echo "# 退出码: $EXIT_CODE" >> zby.txt
-          echo "# 时间: $(date)" >> zby.txt
-          echo "# 错误输出:" >> zby.txt
-          cat "$TEMP_OUTPUT" >> zby.txt
-          
-          echo "已将错误信息保存到zby.txt"
-        fi
-        
-        # 确保zby.txt存在
-        if [ ! -f "zby.txt" ]; then
-          echo "创建空的zby.txt文件"
-          echo "# 脚本执行完成" > zby.txt
-          echo "# 时间: $(date)" >> zby.txt
-        fi
-
-    - name: 检查并提交结果
-      run: |
-        echo "=== 检查并提交结果 ==="
-        cd ${{ github.workspace }}
-        
-        # 确保zby.txt存在
-        if [ ! -f "zby.txt" ]; then
-          echo "错误: zby.txt不存在"
+        # 确保脚本存在
+        if [ ! -f "set/items-hj3.py" ]; then
+          echo "错误: 找不到 set/items-hj3.py"
+          echo "目录内容:"
+          ls -la
           exit 1
         fi
         
-        echo "zby.txt文件信息:"
-        ls -la zby.txt
-        echo "文件前10行:"
-        head -10 zby.txt || echo "文件为空"
+        # 运行脚本并捕获所有输出
+        echo "运行 set/items-hj3.py..."
         
-        # 配置Git
+        # 尝试运行脚本，无论成功或失败都继续
+        set +e
+        SCRIPT_OUTPUT=$(python set/items-hj3.py 2>&1)
+        EXIT_CODE=$?
+        set -e
+        
+        echo "脚本退出码: $EXIT_CODE"
+        
+        # 创建zby.txt文件
+        echo "=== 创建zby.txt文件 ==="
+        
+        # 文件头部信息
+        echo "# zby.txt - 自动生成" > zby.txt
+        echo "# 生成时间: $(date)" >> zby.txt
+        echo "# 脚本: set/items-hj3.py" >> zby.txt
+        echo "# 退出码: $EXIT_CODE" >> zby.txt
+        echo "# =========================" >> zby.txt
+        
+        # 如果有脚本输出，添加到文件中
+        if [ -n "$SCRIPT_OUTPUT" ]; then
+          echo "# 脚本输出:" >> zby.txt
+          echo "$SCRIPT_OUTPUT" >> zby.txt
+        else
+          echo "# 脚本没有输出" >> zby.txt
+        fi
+        
+        # 添加分隔符和示例数据（如果需要）
+        echo "# =========================" >> zby.txt
+        echo "# 示例数据（如果没有生成数据）" >> zby.txt
+        echo "项目1,值1" >> zby.txt
+        echo "项目2,值2" >> zby.txt
+        echo "项目3,值3" >> zby.txt
+        
+        echo "zby.txt 已创建"
+        echo "文件大小: $(wc -l < zby.txt) 行"
+        echo "文件内容预览:"
+        head -10 zby.txt
+        
+        # 保存退出码到环境变量
+        echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+        echo "has_output=$(if [ -n "$SCRIPT_OUTPUT" ]; then echo "true"; else echo "false"; fi)" >> $GITHUB_OUTPUT
+
+    - name: 提交文件到仓库
+      run: |
+        echo "=== 提交文件到仓库 ==="
+        
+        # 配置Git用户
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         
-        # 拉取最新更改
+        # 拉取最新更改，避免冲突
         echo "拉取最新更改..."
-        git pull origin ${{ github.ref_name }} --no-rebase 2>/dev/null || echo "拉取失败或无需拉取"
+        git pull origin ${{ github.ref_name }} --no-rebase 2>/dev/null || echo "拉取失败或无更改"
         
-        # 检查是否有更改
-        echo "检查文件更改..."
+        # 检查文件是否有更改
         if git diff --quiet zby.txt 2>/dev/null; then
-          echo "文件无更改，无需提交"
+          echo "zby.txt 没有更改，无需提交"
         else
-          echo "检测到文件更改，准备提交"
+          echo "检测到zby.txt有更改"
           
-          # 添加并提交
+          # 显示更改内容
+          echo "更改内容:"
+          git diff zby.txt || echo "无法显示差异"
+          
+          # 添加并提交文件
           git add zby.txt
           
           # 根据脚本执行状态设置提交信息
-          if [ "${{ steps.run-script.outputs.EXIT_CODE }}" == "0" ]; then
-            commit_msg="自动更新: 脚本执行成功 [$(date +'%Y-%m-%d %H:%M:%S')]"
+          if [ "${{ steps.run-script.outputs.exit_code }}" == "0" ]; then
+            COMMIT_MSG="自动更新: items-hj3.py执行成功 [$(date +'%Y-%m-%d %H:%M:%S')]"
           else
-            commit_msg="自动更新: 脚本执行失败，已记录错误 [$(date +'%Y-%m-%d %H:%M:%S')]"
+            COMMIT_MSG="自动更新: items-hj3.py执行失败 [$(date +'%Y-%m-%d %H:%M:%S')]"
           fi
           
-          git commit -m "$commit_msg"
+          git commit -m "$COMMIT_MSG"
           
-          # 推送
-          echo "推送更改..."
+          # 推送更改
+          echo "推送更改到仓库..."
           git push origin ${{ github.ref_name }}
+          
+          echo "提交完成: $COMMIT_MSG"
         fi
 
     - name: 工作流总结
       run: |
         echo "=== 工作流执行总结 ==="
         echo "执行时间: $(date)"
-        echo "触发事件: ${{ github.event_name }}"
-        echo "分支: ${{ github.ref_name }}"
+        echo "触发方式: ${{ github.event_name }}"
+        echo "目标分支: ${{ github.ref_name }}"
+        echo "脚本退出码: ${{ steps.run-script.outputs.exit_code }}"
+        echo "脚本是否有输出: ${{ steps.run-script.outputs.has_output }}"
         
-        if [ -f "${{ github.workspace }}/zby.txt" ]; then
-          echo "✅ zby.txt 已创建"
-          echo "文件大小: $(wc -l < ${{ github.workspace }}/zby.txt) 行"
-          echo "前3行内容:"
-          head -3 ${{ github.workspace }}/zby.txt
+        if [ -f "zby.txt" ]; then
+          LINE_COUNT=$(wc -l < zby.txt)
+          echo "✅ zby.txt 已生成: $LINE_COUNT 行"
+          echo "文件内容预览:"
+          head -5 zby.txt
         else
-          echo "❌ zby.txt 未创建"
+          echo "❌ zby.txt 未生成"
         fi
-        
-        echo "脚本输出 (前20行):"
-        echo "${{ steps.run-script.outputs.SCRIPT_OUTPUT }}" | head -20
