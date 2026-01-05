@@ -48,7 +48,7 @@ def filter_live_sources():
     ]
     
     # 获取直播源
-    url = "https://raw.githubusercontent.com/q1017673817/iptvz/main/zubo.txt"
+    url = "https://raw.githubusercontent.com/gzj7003/iptvz/refs/heads/main/zubo_all.txt"
     try:
         response = requests.get(url, verify=False, timeout=10)
         response.raise_for_status()
