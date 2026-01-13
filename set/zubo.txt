@@ -3,7 +3,7 @@ CCTV2,https://iptv.catvod.com/live.php?id=CCTV2
 CCTV3,https://iptv.catvod.com/live.php?id=CCTV3
 CCTV4,https://iptv.catvod.com/live.php?id=CCTV4
 CCTV5,https://iptv.catvod.com/live.php?id=CCTV5
-CCTV5,https://iptv.catvod.com/live.php?id=CCTV6
+CCTV6,https://iptv.catvod.com/live.php?id=CCTV6
 CCTV7,https://iptv.catvod.com/live.php?id=CCTV7
 CCTV8,https://iptv.catvod.com/live.php?id=CCTV8
 CCTV9,https://iptv.catvod.com/live.php?id=CCTV9
@@ -33,7 +33,6 @@ CCTV2,http://171.15.18.199:8180/TV00000000000000000002@HHZT
 CCTV3,http://171.15.18.199:8180/TV00000000000000000003@HHZT
 CCTV4,http://171.15.18.199:8180/TV00000000000000000004@HHZT
 CCTV5,http://171.15.18.199:8180/TV00000000000000000005@HHZT
-CCTV5+,http://171.15.18.199:8180/TV00000000000000000016@HHZT
 CCTV6,http://171.15.18.199:8180/TV00000000000000000006@HHZT
 CCTV7,http://171.15.18.199:8180/TV00000000000000000007@HHZT
 CCTV8,http://171.15.18.199:8180/TV00000000000000000008@HHZT
@@ -59,8 +58,6 @@ CCTV12,http://tvtj.jxwltx.com:8003/cctv12.m3u8
 CCTV13,http://tvtj.jxwltx.com:8003/cctv13.m3u8
 CCTV14,http://tvtj.jxwltx.com:8003/cctv14.m3u8
 CCTV15,http://tvtj.jxwltx.com:8003/cctv15.m3u8
-CCTV16,http://tvtj.jxwltx.com:8003/cctv5p.m3u8
-CCTV17,http://tvtj.jxwltx.com:8003/cctv17.m3u8
 CCTV1,http://tvtj.jxwltx.com:8003/cctv1.m3u8
 CCTV2,http://tvtj.jxwltx.com:8003/cctv2.m3u8
 CCTV3,http://tvtj.jxwltx.com:8003/cctv3.m3u8
@@ -192,6 +189,9 @@ CCTV15,http://go.bkpcp.top/mg/cctv15
 江苏卫视,http://183.142.34.6:8889/rtp/233.50.201.106:5140
 东方卫视,http://183.142.34.6:8889/rtp/233.50.201.125:5140
 浙江卫视,http://go.bkpcp.top/mg/zjws
+浙江卫视,http://m.061899.xyz/mg/zjws
+浙江卫视,http://t.061899.xyz/tl/tl.php?id=zjws
+浙江卫视,http://cdn6.bkpcp.top/tl/tuiliu.php?id=zjws
 北京卫视,http://go.bkpcp.top/mg/bjws
 江苏卫视,http://k.061899.xyz/m.php?id=jsws
 浙江卫视,http://k.061899.xyz/m.php?id=zjws
