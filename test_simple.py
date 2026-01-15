@@ -3,7 +3,7 @@ import requests
 
 def main():
     # 先测试能否访问URL
-    url = "https://raw.githubusercontent.com/gzj7003/iptv-api/refs/heads/master/output/user_result.txt"
+    url = "https://raw.githubusercontent.com/gzj7003/iptvz/refs/heads/main/zubo.txt"
     
     try:
         print("测试访问URL...")
