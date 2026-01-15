@@ -1,0 +1,36 @@
+name: itvlist
+
+on:
+  workflow_dispatch:  # 允许手动触发
+  schedule:
+    - cron: '0 20,8 * * *'
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+    
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run channel filter
+        run: python ${{ github.workspace }}/filter_channels.py
+
+      - name: 提交更改
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add itvlist.txt
+          git commit -m "更新电视频道列表 $(date +'%Y-%m-%d %H:%M:%S')"
+          git push
