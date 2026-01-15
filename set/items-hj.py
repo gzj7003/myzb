@@ -31,8 +31,8 @@ def test_url_speed(url):
 def filter_live_sources():
     # 模板频道列表
     template_channels = [
-        "CCTV1", "CCTV2", "CCTV3", "CCTV4", "CCTV5", "CCTV6", "CCTV7", "CCTV8",
-        "CCTV9", "CCTV10", "CCTV11", "CCTV12", "CCTV13", "CCTV14", "CCTV15",
+        "CCTV-1综合", "CCTV-2财经", "CCTV-3综艺", "CCTV-4中文国际", "CCTV-5体育", "CCTV-6电影", "CCTV-7国防军事", "CCTV-8电视剧",
+        "CCTV-9纪录", "CCTV-10科教", "CCTV-11戏曲", "CCTV-12社会与法", "CCTV-13新闻", "CCTV-14少儿", "CCTV-15音乐",
         "湖南卫视", "浙江卫视", "东方卫视", "北京卫视", "江苏卫视", "安徽卫视",
         "重庆卫视", "四川卫视", "天津卫视", "兵团卫视"
     ]
