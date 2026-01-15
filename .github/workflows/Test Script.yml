@@ -1,0 +1,24 @@
+name: Run test_simple Script
+
+on:
+  workflow_dispatch:  # 允许手动触发
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Run test.py
+      run: python test_simple.py
