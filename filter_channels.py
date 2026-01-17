@@ -1,11 +1,8 @@
-[file name]: filter_channels.py
-[file content begin]
 import requests
 import sys
 import os
 import concurrent.futures
 import time
-import re
 from collections import defaultdict
 import urllib3
 
@@ -187,4 +184,3 @@ def filter_and_speed_test_channels():
 
 if __name__ == "__main__":
     filter_and_speed_test_channels()
-[file content end]
