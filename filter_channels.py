@@ -1,15 +1,12 @@
 import requests
 import sys
 import os
-import concurrent.futures
-import time
-from collections import defaultdict
 import urllib3
 
 # 禁用SSL警告
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# 目标电视台列表（需要测速的频道）
+# 目标电视台模板列表（所有频道，不测速直接保留）
 target_channels = [
     "CCTV-1综合", "CCTV-2财经", "CCTV-3综艺", "CCTV-4中文国际", "CCTV-5体育",
     "CCTV-6电影", "CCTV-7国防军事", "CCTV-8电视剧", "CCTV-9纪录", "CCTV-10科教",
@@ -26,23 +23,7 @@ suzhou_channels = [
     ("苏州4K", "https://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8$!白名单-不参与测速-保留结果在前")
 ]
 
-def test_channel_speed(url, timeout=3):
-    """
-    测试频道URL的速度
-    返回：(速度毫秒, 是否成功)
-    """
-    start_time = time.time()
-    try:
-        # 只发送HEAD请求以节省时间和带宽
-        response = requests.head(url, timeout=timeout, verify=False, allow_redirects=True)
-        if response.status_code == 200:
-            speed_ms = (time.time() - start_time) * 1000  # 转换为毫秒
-            return speed_ms, True
-    except:
-        pass
-    return float('inf'), False
-
-def filter_and_speed_test_channels():
+def filter_channels():
     # 从源获取数据
     url = "https://raw.githubusercontent.com/gzj7003/iptvz/refs/heads/main/zubo.txt"
     
@@ -60,8 +41,11 @@ def filter_and_speed_test_channels():
     lines = data.strip().split('\n')
     print(f"源数据共有 {len(lines)} 行")
     
-    # 存储匹配到的频道，按频道名分组
-    channel_sources = defaultdict(list)
+    # 存储所有匹配到的频道
+    all_matched_channels = []
+    
+    # 存储每个频道的最新源（用于去重）
+    latest_channels = {}
     
     # 遍历每一行，查找目标频道
     for line in lines:
@@ -78,92 +62,46 @@ def filter_and_speed_test_channels():
                         # 清理URL，移除可能的多余部分
                         if '$!' in channel_url:
                             channel_url = channel_url.split('$!')[0]
-                        channel_sources[target].append((channel_name, channel_url))
+                        
+                        # 添加到匹配列表
+                        all_matched_channels.append((target, channel_url))
+                        
+                        # 更新最新源（后面出现的会覆盖前面的）
+                        latest_channels[target] = channel_url
                         break  # 找到匹配就跳出内层循环
             except ValueError:
                 continue  # 跳过格式不正确的行
     
-    print(f"\n匹配到的频道分组统计:")
-    for channel, sources in channel_sources.items():
-        print(f"  {channel}: {len(sources)} 个源")
-    
-    # 对每个频道的源进行测速，并保留前10个最快的
-    filtered_channels = []
-    
-    print("\n开始测速...")
-    for channel_name in target_channels:
-        if channel_name in channel_sources and channel_sources[channel_name]:
-            sources = channel_sources[channel_name]
-            print(f"\n测速频道: {channel_name} ({len(sources)}个源)")
-            
-            # 准备测速数据
-            speed_results = []
-            
-            # 使用线程池并行测速（限制并发数为10）
-            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-                # 提交测速任务
-                future_to_source = {}
-                for name, url in sources:
-                    future = executor.submit(test_channel_speed, url)
-                    future_to_source[future] = (name, url)
-                
-                # 收集结果
-                for future in concurrent.futures.as_completed(future_to_source):
-                    name, url = future_to_source[future]
-                    try:
-                        speed, success = future.result()
-                        if success:
-                            speed_results.append((name, url, speed))
-                    except Exception as e:
-                        # 测速失败，忽略此源
-                        pass
-            
-            # 按速度排序（从快到慢）
-            if speed_results:
-                speed_results.sort(key=lambda x: x[2])
-                
-                # 只保留前10个最快的
-                top_sources = speed_results[:10]
-                
-                # 准备最终输出
-                if len(top_sources) == 1:
-                    # 只有一个源，直接使用
-                    final_url = top_sources[0][1]
-                else:
-                    # 多个源，用竖线分隔
-                    urls = [source[1] for source in top_sources]
-                    final_url = '|'.join(urls)
-                
-                filtered_channels.append((channel_name, final_url))
-                
-                # 打印测速结果
-                print(f"  保留 {len(top_sources)} 个最快源:")
-                for i, (name, url, speed) in enumerate(top_sources[:3]):  # 只显示前3个
-                    print(f"    {i+1}. {speed:.0f}ms")
-                if len(top_sources) > 3:
-                    print(f"    ... 还有 {len(top_sources)-3} 个源")
-            else:
-                print(f"  没有有效的源，跳过此频道")
-    
-    print("\n测速完成!")
+    # 统计匹配结果
+    print(f"\n匹配到的频道统计:")
+    for channel in target_channels:
+        count = sum(1 for name, _ in all_matched_channels if name == channel)
+        if count > 0:
+            print(f"  {channel}: {count} 个源")
+        else:
+            print(f"  {channel}: 未找到源")
     
     # 输出到文件
     output_filename = "itvlist.txt"
     
     with open(output_filename, 'w', encoding='utf-8') as f:
-        # 首先写入苏州地方台（白名单，不参与测速）
+        # 首先写入苏州地方台（白名单）
         for name, url in suzhou_channels:
             f.write(f"{name},{url}\n")
             print(f"添加白名单频道: {name}")
         
-        # 然后写入测速后的频道
-        for name, url in filtered_channels:
-            f.write(f"{name},{url}\n")
+        # 然后写入目标频道的每个源（不合并，每个源单独一行）
+        # 使用去重后的最新源
+        for channel in target_channels:
+            if channel in latest_channels:
+                f.write(f"{channel},{latest_channels[channel]}\n")
+                print(f"添加频道: {channel}")
+            else:
+                print(f"警告: {channel} 未找到可用源")
     
     print(f"\n筛选完成！")
-    print(f"添加了 {len(suzhou_channels)} 个苏州地方台（白名单）")
-    print(f"添加了 {len(filtered_channels)} 个测速后的目标频道")
-    print(f"每个频道最多保留前10个最快源")
+    print(f"添加了 {len(suzhou_channels)} 个苏州地方台")
+    print(f"添加了 {len([c for c in target_channels if c in latest_channels])} 个目标频道")
     print(f"结果已保存到 {output_filename}")
     
     # 检查文件是否成功创建
@@ -183,4 +121,4 @@ def filter_and_speed_test_channels():
         sys.exit(1)
 
 if __name__ == "__main__":
-    filter_and_speed_test_channels()
+    filter_channels()
