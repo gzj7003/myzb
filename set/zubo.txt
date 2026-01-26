@@ -124,9 +124,8 @@ CCTV15,https://iptv.catvod.com/live.php?id=CCTV15
 东方卫视,http://183.129.136.102:9999/rtp/233.50.201.125:5140
 江苏卫视,http://go.bkpcp.top/mg/jsws
 东方卫视,http://go.bkpcp.top/mg/dfws
-北京卫视,http://183.142.34.6:8889/rtp/233.50.201.107:5140
-江苏卫视,http://183.142.34.6:8889/rtp/233.50.201.106:5140
 东方卫视,http://183.142.34.6:8889/rtp/233.50.201.125:5140
+浙江卫视,http://183.129.136.102:9999/rtp/233.50.200.145:5140
 浙江卫视,http://go.bkpcp.top/mg/zjws
 浙江卫视,http://m.061899.xyz/mg/zjws
 浙江卫视,http://t.061899.xyz/tl/tl.php?id=zjws
@@ -135,8 +134,6 @@ CCTV15,https://iptv.catvod.com/live.php?id=CCTV15
 江苏卫视,http://k.061899.xyz/m.php?id=jsws
 浙江卫视,http://k.061899.xyz/m.php?id=zjws
 东方卫视,http://k.061899.xyz/m.php?id=dfws
-东方卫视,http://go.bkpcp.top/mg/dfws
-北京卫视,http://go.bkpcp.top/mg/bjws
 北京卫视,http://k.061899.xyz/m.php?id=bjws
 北京卫视,http://t.061899.xyz/tl/tl.php?id=bjws
 兵团卫视,http://101.229.66.65:8888/udp/239.45.1.117:5140
