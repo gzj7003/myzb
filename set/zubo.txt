@@ -121,6 +121,8 @@ CCTV15,http://iptv.huuc.edu.cn/hls/cctv15hd.m3u8
 东方卫视,http://k.061899.xyz/m.php?id=dfws
 北京卫视,http://k.061899.xyz/m.php?id=bjws
 北京卫视,http://t.061899.xyz/tl/tl.php?id=bjws
+兵团卫视,http://58.32.18.53:4022/rtp/233.18.204.221:5140
+兵团卫视,http://112.19.88.97:8899/rtp/239.11.0.204:5140
 兵团卫视,https://www.btzx.com.cn/special/bofang/btzxjmd/index.shtml
 苏州新闻综合,http://live-auth.51kandianshi.com/szgd/csztv1.m3u8
 苏州社会经济,http://live-auth.51kandianshi.com/szgd/csztv2.m3u8
