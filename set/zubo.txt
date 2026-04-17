@@ -13,7 +13,6 @@ CCTV12,http://j1900.silicaite.top:58888/udp/239.49.8.55:9822
 CCTV13,http://j1900.silicaite.top:58888/rtp/239.49.8.109:8000
 CCTV14,http://j1900.silicaite.top:58888/udp/239.49.0.14:8104
 CCTV15,http://j1900.silicaite.top:58888/udp/239.49.0.15:8112
-CCTV2,http://j1900.silicaite.top:58888/rtp/239.49.8.50:9802
 CCTV1,http://go.bkpcp.top/mg/cctv1
 CCTV2,http://go.bkpcp.top/mg/cctv2
 CCTV3,http://go.bkpcp.top/mg/cctv3
@@ -60,9 +59,7 @@ CCTV14,http://k.061899.xyz/m.php?id=cctv14
 CCTV14,http://t.061899.xyz/tl/tl.php?id=cctv14
 CCTV15,http://k.061899.xyz/m.php?id=cctv15
 CCTV15,http://t.061899.xyz/tl/tl.php?id=cctv15
-CCTV1,http://j1900.silicaite.top:58888/rtp/239.49.8.19:9614
 CCTV2,http://dentist.dsmv.top:7777/udp/239.49.8.50:9802
-CCTV3,http://j1900.silicaite.top:58888/rtp/239.49.8.74:8000
 CCTV4,http://dentist.dsmv.top:7777/udp/239.49.8.51:9806
 CCTV5,http://dentist.dsmv.top:7777/udp/239.49.8.75:8000
 CCTV6,http://dentist.dsmv.top:7777/udp/239.49.8.76:8000
@@ -75,9 +72,7 @@ CCTV12,http://dentist.dsmv.top:7777/udp/239.49.8.55:9822
 CCTV13,http://dentist.dsmv.top:7777/udp/239.49.8.109:8000
 CCTV14,http://dentist.dsmv.top:7777/udp/239.49.0.14:8104
 CCTV15,http://dentist.dsmv.top:7777/udp/239.49.0.15:8112
-CCTV1,http://j1900.silicaite.top:58888/rtp/239.49.8.19:9614
 CCTV2,http://h.vanshun.com:8802/udp/239.49.8.50:9802
-CCTV3,http://j1900.silicaite.top:58888/rtp/239.49.8.74:8000
 CCTV4,http://h.vanshun.com:8802/udp/239.49.8.51:9806
 CCTV5,http://h.vanshun.com:8802/udp/239.49.8.75:8000
 CCTV6,http://h.vanshun.com:8802/udp/239.49.8.76:8000
@@ -94,10 +89,6 @@ CCTV15,http://h.vanshun.com:8802/udp/239.49.0.15:8112
 东方卫视,http://h.vanshun.com:8802/udp/239.49.8.140:6000
 浙江卫视,http://h.vanshun.com:8802/udp/239.49.8.139:6000
 北京卫视,http://h.vanshun.com:8802/udp/239.49.8.141:6000
-江苏卫视,http://dentist.dsmv.top:7777/udp/239.49.8.138:6000
-东方卫视,http://dentist.dsmv.top:7777/udp/239.49.8.140:6000
-浙江卫视,http://dentist.dsmv.top:7777/udp/239.49.8.139:6000
-北京卫视,http://dentist.dsmv.top:7777/udp/239.49.8.141:6000
 江苏卫视,http://j1900.silicaite.top:58888/udp/239.49.8.138:6000
 东方卫视,http://j1900.silicaite.top:58888/udp/239.49.8.140:6000
 浙江卫视,http://j1900.silicaite.top:58888/udp/239.49.8.139:6000
@@ -115,9 +106,7 @@ CCTV15,http://h.vanshun.com:8802/udp/239.49.0.15:8112
 北京卫视,http://go.bkpcp.top/mg/bjws
 江苏卫视,http://k.061899.xyz/m.php?id=jsws
 浙江卫视,http://k.061899.xyz/m.php?id=zjws
-浙江卫视,http://home.scanflove.com:7788/rtp/235.254.197.194:7980
 东方卫视,http://k.061899.xyz/m.php?id=dfws
-北京卫视,http://k.061899.xyz/m.php?id=bjws
 北京卫视,http://t.061899.xyz/tl/tl.php?id=bjws
 兵团卫视,http://home.scanflove.com:7788/rtp/235.254.197.183:7980
 苏州新闻综合,http://live-auth.51kandianshi.com/szgd/csztv1.m3u8
