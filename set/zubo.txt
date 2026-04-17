@@ -27,7 +27,6 @@ CCTV11,http://go.bkpcp.top/mg/cctv11
 CCTV12,http://go.bkpcp.top/mg/cctv12
 CCTV13,http://go.bkpcp.top/mg/cctv13
 CCTV14,http://go.bkpcp.top/mg/cctv14
-CCTV14,https://gcalic.v.myalicdn.com/gc/wgw05_1/index.m3u8
 CCTV15,http://go.bkpcp.top/mg/cctv15
 CCTV1,http://k.061899.xyz/m.php?id=cctv1
 CCTV1,http://t.061899.xyz/tl/tl.php?id=cctv1
@@ -70,7 +69,6 @@ CCTV10,http://dentist.dsmv.top:7777/udp/239.49.8.54:9818
 CCTV11,http://dentist.dsmv.top:7777/udp/239.49.0.11:8080
 CCTV12,http://dentist.dsmv.top:7777/udp/239.49.8.55:9822
 CCTV13,http://dentist.dsmv.top:7777/udp/239.49.8.109:8000
-CCTV14,http://dentist.dsmv.top:7777/udp/239.49.0.14:8104
 CCTV15,http://dentist.dsmv.top:7777/udp/239.49.0.15:8112
 CCTV2,http://h.vanshun.com:8802/udp/239.49.8.50:9802
 CCTV4,http://h.vanshun.com:8802/udp/239.49.8.51:9806
