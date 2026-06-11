@@ -46,8 +46,14 @@ def filter_live_sources():
         "苏州4K,http://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8$江苏苏州地方"
     ]
     
-    # 获取直播源
-    url = "https://raw.githubusercontent.com/gzj7003/iptvz/refs/heads/main/zubo.txt"
+    # 多个直播源地址
+    urls = [
+        "https://raw.githubusercontent.com/gzj7003/iptvz/refs/heads/main/zubo.txt",
+        "https://raw.githubusercontent.com/Supprise0901/TVBox_live/refs/heads/main/live.txt"
+    ]
+    
+    all_sources = []
+    for url in urls:
     try:
         response = requests.get(url, verify=False, timeout=10)
         response.raise_for_status()
