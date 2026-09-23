@@ -71,7 +71,7 @@ def filter_live_sources():
         "CCTV1", "CCTV2", "CCTV3", "CCTV4", "CCTV5", "CCTV6", "CCTV7", "CCTV8",
         "CCTV9", "CCTV10", "CCTV11", "CCTV12", "CCTV13", "CCTV14", "CCTV15",
         "湖南卫视", "浙江卫视", "东方卫视", "北京卫视", "江苏卫视", "安徽卫视",
-        "重庆卫视", "四川卫视", "天津卫视", "兵团卫视",
+        "重庆卫视", "四川卫视", "兵团卫视",
     ]
 
     suzhou_sources = [
