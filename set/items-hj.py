@@ -101,7 +101,7 @@ def filter_live_sources():
     ]
 
     urls = [
-        "https://raw.githubusercontent.com/gzj7003/tv/refs/heads/main/itvlist.txt",
+        "https://raw.githubusercontent.com/gzj7003/myzb/refs/heads/main/itvlist.txt",
         "https://raw.githubusercontent.com/gzj7003/iptvz/refs/heads/main/txt/%E6%B9%96%E5%8D%97%E7%94%B5%E4%BF%A1.txt",
     ]
 
