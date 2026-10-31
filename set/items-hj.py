@@ -103,7 +103,7 @@ def filter_live_sources():
     urls = [
         "https://raw.githubusercontent.com/gzj7003/myzb/refs/heads/main/itvlist.txt",
         "https://gh-proxy.org/https://github.com/songlees355-wq/okay/blob/main/IPTV4%E6%B5%8B%E8%AF%95.txt",
-        "https://raw.githubusercontent.com/gzj7003/iptvz/refs/heads/main/txt/%E6%B9%96%E5%8D%97%E7%94%B5%E4%BF%A1.txt",
+        "https://iptv-org.github.io/iptv/countries/cn.m3u",
     ]
 
     # channel -> {test_url: raw_url}
