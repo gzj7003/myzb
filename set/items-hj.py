@@ -89,15 +89,15 @@ def filter_live_sources():
         "CCTV1", "CCTV2", "CCTV3", "CCTV4", "CCTV5", "CCTV6", "CCTV7", "CCTV8",
         "CCTV9", "CCTV10", "CCTV11", "CCTV12", "CCTV13", "CCTV14", "CCTV15",
         "湖南卫视", "浙江卫视", "东方卫视", "北京卫视", "江苏卫视", "安徽卫视",
-        "重庆卫视", "四川卫视", "天津卫视", "兵团卫视",
+        "兵团卫视",
     ]
 
     suzhou_sources = [
-        "苏州新闻综合,http://live-auth.51kandianshi.com/szgd/csztv1.m3u8$江苏苏州地方",
-        "苏州社会经济,http://live-auth.51kandianshi.com/szgd/csztv2.m3u8$江苏苏州地方",
-        "苏州文化生活,http://live-auth.51kandianshi.com/szgd/csztv3.m3u8$江苏苏州地方",
-        "苏州生活资讯,http://live-auth.51kandianshi.com/szgd/csztv5.m3u8$江苏苏州地方",
-        "苏州4K,http://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8$江苏苏州地方",
+        "苏州新闻综合,http://live-auth.51kandianshi.com/szgd/csztv1.m3u8",
+        "苏州社会经济,http://live-auth.51kandianshi.com/szgd/csztv2.m3u8",
+        "苏州文化生活,http://live-auth.51kandianshi.com/szgd/csztv3.m3u8",
+        "苏州生活资讯,http://live-auth.51kandianshi.com/szgd/csztv5.m3u8",
+        "苏州4K,http://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8",
     ]
 
     urls = [
