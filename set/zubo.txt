@@ -238,8 +238,8 @@ CCTV15,http://iiiij.icu:8767/cctv15.m3u8
 兵团卫视,http://e1.woc.iiiya.cn:18888/rtp/239.61.2.228:9356
 兵团卫视,http://27.22.35.13:7788/956923145
 兵团卫视,http://175.169.113.102:1234/956923145
-苏州新闻综合,http://live-auth.51kandianshi.com/szgd/csztv1.m3u8$江苏苏州地方
-苏州社会经济,http://live-auth.51kandianshi.com/szgd/csztv2.m3u8$江苏苏州地方
-苏州文化生活,http://live-auth.51kandianshi.com/szgd/csztv3.m3u8$江苏苏州地方
-苏州生活资讯,http://live-auth.51kandianshi.com/szgd/csztv5.m3u8$江苏苏州地方
-苏州4K,http://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8$江苏苏州地方
+苏州新闻综合,http://live-auth.51kandianshi.com/szgd/csztv1.m3u8
+苏州社会经济,http://live-auth.51kandianshi.com/szgd/csztv2.m3u8
+苏州文化生活,http://live-auth.51kandianshi.com/szgd/csztv3.m3u8
+苏州生活资讯,http://live-auth.51kandianshi.com/szgd/csztv5.m3u8
+苏州4K,http://live-auth.51kandianshi.com/szgd/csztv4k_hd.m3u8
